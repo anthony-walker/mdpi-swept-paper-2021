@@ -76,7 +76,7 @@ architecture.
 
 \section{Introduction}
 
-Unsteady multidimensional PDES often require the use of shared and/or distributed memory systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. The solution of many problems at any point in the grid is ineherently dependent on the neighboring points in each dimension. This dependence necessitates communication between computing nodes. Each of these communications incurs a minimum cost regardless of the amount of information communicated known as network latency.  This latency can be siginificantly restrictive on the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the latency barrier and is particularly impactful in solutions advancing many time steps [CITE ALHUBAIL AND WANG]. 
+Unsteady multidimensional PDES often require the use of shared and/or distributed memory systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. The solution of many problems at any point in the grid is ineherently dependent on the neighboring points in each dimension. This dependence necessitates communication between computing nodes. Each of these communications incurs a minimum cost regardless of the amount of information communicated known as network latency.  This latency can be siginificantly restrictive on the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the latency barrier and is particularly impactful in solutions advancing many time steps [CITE ALHUBAIL AND WANG].
 
 you can do something like:
 1. solving multidimensional PDEs for practical problems requires using shared and/or distributed memory systems
