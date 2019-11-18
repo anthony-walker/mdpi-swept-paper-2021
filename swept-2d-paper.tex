@@ -1,9 +1,10 @@
 \documentclass[review]{elsarticle}
-
+\usepackage[margin=1in]{geometry}
 \usepackage{lineno,hyperref}
 \usepackage{mathtools}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage{subfig}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \modulolinenumbers[5]
 \journal{Journal of \LaTeX\ Templates}
@@ -125,6 +126,7 @@ Hopefully, it is clear at this point that latency reduction is important in high
 %
 
 \section{Implementation}
+\subsection{Strategy}
 The implementation of the 2D swept rule on heterogeneous architecture, referred to as PySweep on GitHub, involves multiple languages, architectures, strategies, and problems which will be discussed along with decisions made during the implementation process. This solver is also paired with a more traditional (standard) solver that communicates as is necessary to complete a step. This standard solver is also avaliable in the repository for comparison. The code was developed on a workstation with 2 Nvidia GPUs (Tesla K40c and Quadro K620) and a CPU with 16 cores. It was tested on a small computing cluster at Oregon State University which includes a single Nvidia Tesla K40m and 6 Intel(R) Xeon(R) CPU E5-2660 v3 CPUs which are linked via InfiniBand.
 
 \par
@@ -136,8 +138,9 @@ The CPU parallelism was implemented with a combination of mpi4py, a MPI (Message
 \par Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. The swept solver and standard solver both use the same decomposition, process handling, and work allocation strategies so that the performance comparison between the two is representative of the differences between the solvers. The swept solver does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation which may affect the performance. 
 
 \par
-There are 4 phases that occur during the swept solution process. In the code, these phases are referred to as UpPyramid, Bridge (X or Y), Octahedron, and DownPyramid so that convention will be continued here. They are so named as these shapes are produced during the solution procedure if you visual the solution's progression in 3 dimensions (x,y,t); this will be demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem.  
+There are 4 phases that occur during the swept solution process. In the code, these phases are referred to as Up-Pyramid, Bridge (X or Y), Octahedron, and Down-Pyramid so that convention will be continued here. They are so named as these shapes are produced during the solution procedure if you visual the solution's progression in 3 dimensions (x,y,t); this will be demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem.  
 
+\subsection{Parameters}
 \par
 The numerical scheme in both space and time directly affects the performance of the swept rule as it limits the number of steps that can be taken per phase. PySweep was implemented with only symmetrical stencils on a structured grid for simplicity. So, lets define the number of points on each side of the current point as $n$. The height $h$ of each phase except the Octahedron---or number of steps in time---is then
 \begin{equation}
@@ -147,7 +150,11 @@ for a given block size $b$. The height of the Octahedron is $2h$. This height is
 
 \par
 The block size is a parameter which determines how many threads will be executed in a group referred to as a block. This parameter plays a role in the performance of the swept rule on heterogeneous architecture as it directly limits the number of steps that can be taken by any swept phase. The block size is restricted by both the code and the hardware used. The workstation GPU, a Tesla K40c, restricts blocks to a maximum of $1024$ threads per block ($T_{max}$).
-The block size, $b$, is then restricted by the code to being square i.e. the x and y dimension of the block must be the same. This was done because the number of steps taken in time via the swept rule is directly limited by the minimum dimension of the block. The block is finally limited by the expression
+The block size, $b$, is then restricted by the code to being square i.e. the x and y dimension of the block must be the same. The x and y dimensions of the block can be found as
+\begin{equation}
+    b_x = b_y = \sqrt{b}.
+\end{equation}
+This was done because the number of steps taken in time via the swept rule is directly limited by the minimum dimension of the block. The block is finally limited by the expression
 \begin{equation}
     b  = (2nf)^2,
 \end{equation}
@@ -163,62 +170,97 @@ The GPU affinity---which designates the amount of work to be handled by the GPU-
 \end{equation}
 where $a$ is the affinity, $G$ is the work of the GPU, and $W$ is the total work. In this implementation, the affinity does not account for the number of GPUs or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10^2$ blocks and $a=0.5$ then $5\times10$ blocks will be deemed as GPU work and the remainder is CPU work. These portions of work are then divided amongst the available resources of each type. This decomposition strategy requires the array dimensions $(n, m)$ be equally divisible by the given block size and, it will limit the codes scalability. However, it is sufficient for the purposes of this study and can be modified as is necessary for future studies. 
 
+\subsection{Swept Solution Process}
 \par
 To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). Discussion of the swept rule can at times be convoluted as there are time steps, swept steps, and other actions that can be referred to as steps. To simplify this, the two primary actions of the code will be referred to as communication and calculation. The specific type of calculation will be referred to as the phase. Finally, individual time steps and intermediate time steps---such as those that occur during multi-step schemes---will be referred to as so. 
 
 \par
  Communication is when the code is transferring data to other ranks. Node based rank communication between the CPU and GPUs happens via the use of shared memory; a capability implemented in MPICH-3 or later \cite{Hoefler2013MPIMemory}. Internode communication is perform with typical MPI constructs such as send and receive. a shared GPU memory approach was implemented by Magee et al. which showed benefit \cite{Magee2018AcceleratingDecomposition}. This same strategy is implemented on the GPU and provided the reasoning for adaptation to the CPU portion of the solver. 
+ 
  \par
  Calculation is specifically when the code is developing the solution in time. The specifics of CPU and GPU calculation depends on the particular phase the simulation is currently in. In general, the GPU calculation proceeds by providing it with an array and launching the appropriate kernel; the nature of GPU computing takes care of rest. The CPU calculation begins by disseminating predetermined blocks amongst the available processes. These blocks control the region of shared memory in which each process is allowed to modify.
  
 \par
-The first phase of calculation is the UpPyramid. A dynamic programming approach is used on the CPU portion to calculate the UpPyramid in lieu of conditional statements. Specifically, the indices to develop the UpPyramid are stored globally in a set which is accessed as needed. The GPU portion implements a conditional statement to accomplish this same task because it's speed typically dwarfs that of the CPU regardless. If the code were to eventually be optimized, it could be beneficial to consider a dynamic programming approach such as that implemented on the CPU. In both cases, conditional or dynamic, the code removes $2n$ points from each boundary after every time step. If the time scheme requires multiple intermediate time steps, these points are removed after each intermediate step. The initial boundaries of the UpPyramid are the given block size and the final boundary is restricted to being $2n$.
+The first phase of calculation is the Up-Pyramid which can be viewed in Figure \ref{fig:Up-Pyramid}. A dynamic programming approach is used on the CPU portion to calculate the Up-Pyramid in lieu of conditional statements. Specifically, the indices to develop the Up-Pyramid are stored globally in a set which is accessed as needed. The GPU portion implements a conditional statement to accomplish this same task because it's speed typically dwarfs that of the CPU regardless. If the code were to eventually be optimized, it could be beneficial to consider a dynamic programming approach such as that implemented on the CPU. In both cases, conditional or dynamic, the code removes $2n$ points from each boundary after every time step. If the time scheme requires multiple intermediate time steps, these points are removed after each intermediate step. The initial boundaries of the Up-Pyramid are the given block size and the final boundary is restricted to being $2n$.
 
-%LEFT OF HERE WITH UPPYRAMID
+\par The next step in the process is referred to as the Bridge which occurs independently in each dimension. The solution procedure for the bridges on the CPU and GPU follows the same paradigm as the Up-Pyramid but number of Bridges formed is equal to twice the number of Up-Pyramids. The dimension in which the Bridge grows as time passes is it's reference dimension e.g., the Bridge that grows in the y dimension as time is referred to as the Y-Bridge. The initial boundaries of the each Bridge can be determined from $n$ and $b$. The Bridges grow by $2n$ from these initial boundaries in their reference dimensions and shrink by $2n$ in the other dimension which allows the appropriate calculation points to be determined conditionally or dynamically.
 
-\begin{figure}[h!]
+\par
+Depending on the decomposition strategy, a large portion of the Bridges can be performed prior to inter-node communication. In this implementation, the Y-Bridge---which is shown in Figure \ref{fig:YBridge}---is computed prior to the first communication. The first inter-node communication then occurs by shifting nodal data $b_x/2$ points in the positive X direction. Any data that exceeds the boundaries of it's respective shared array is communicated to the appropriate adjacent node. This process is demonstrated in Figure \ref{fig:Comm1}. The shift in data allows previously determined sets and blocks to be used in the upcoming calculation phases; so the X-Bridge may proceed directly following the communication as shown in \ref{fig:Xbridge}.
+
+\begin{figure}[!htb]
     \centering
-       \includegraphics{figs/UpPyramid.png}
-    \label{fig:UP}
-    \caption{Calculation of the UpPyramid steps (top) and communication of the result (bottom).}
+    \subfloat[Up-Pyramid: The first phase of the swept solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.png}
+      \label{fig:Up-Pyramid}
+    }
+    \subfloat[Y-Bridge: The subsequent phase of the swept solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.png}
+       \label{fig:YBridge}
+    }
+    \vskip
+    \subfloat[The first communication of the solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.png}
+       \label{fig:Comm1}
+    }
+    \subfloat[X-Bridge: The subsequent phase of the swept solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.png}
+       \label{fig:Xbridge}
+    }
+    \caption{The first four steps in the swept solution process.}
+    \label{fig:MainOne}
 \end{figure}
 
-\par The next step in the process is referred to as the Bridge which occurs independently in each dimension. The number of bridges is equal to twice the number of UpPyramids. The height of the bridges can be determined as
-\begin{equation}
-  H_{b} = H_{u}-1.
-\end{equation}
-The dimension in which the bridge grows as time passes is the reference dimension for the bridge (e.g. the bridge that becomes larger in the x dimension is refered to as the X-Bridge). To complete the aforementioned communication process, Bridge shifted regions in each dimension are used to copy data from shared memory to local arrays. Each rank then computes both a X-Bridge and Y-Bridge where a very similar GPU and CPU strategy to the UpPyramid is taken for both bridges. The primary difference is that 1 boundary of each bridge grows in lieu of both boundaries shrinking. Interestingly enough, with the given restrictions, the X-Bridge sets are the inverse of the Y-Bridge sets (i.e. the X-Bridge starts with the set that the Y-Bridge ends on). This is beneficial as only one set of swept step indicies needs to be determined in order to obtain the indicies necessary to solve both bridges. Also, the Bridge phase differs in the fact that it will be executed multiple times over through the simulation as needed to obtain a complete solution between the specified initial and final time. After the calculation is completed, each rank copies the bridge values into the shared memory array to begin the next phase.
-% Bridge Figure
-\begin{figure}[h!]
-    \centering
-       \includegraphics[trim={2.8cm 0.9cm 0 0},clip]{figs/YBridgig:OCTe.png}}
-    \label{fig:BR}
-    \caption{Calculation of the Bridge steps (top) and communication of the result (bottom).}
-\end{figure}
+\par
+The first three phases on the swept solution process demonstrated in Figure~\ref{fig:MainOne} are followed by the Octahedron phase shown in Figure~\ref{fig:Octahedron}. This phase is super position of the Down-Pyramid and Up-Pyramid. The Down-Pyramid---shown in \ref{fig:Down-Pyramid}---always begins with a block that is $4n^2$ and grows by $2n$ on each boundary with every passing time step. The  start is a natural consequence of removing these points during the Up-Pyramid phase. It is completed upon passing the top of the previous Up-Pyramid or Octahedron at which time the upward portion of this phase begins. The entire Octahedron is calculated in the same fashion as the Up-Pyramid on both CPU and GPUs. While the steps are described separately for clarity, they are performed in a single calculation step without communication between ranks. 
 
-\par The next phase of the process is the Octahedron which is essentially super position of the DownPyrmaid and UpPyramid. The DownPyramid indicies are also determined during the pre-sweep phase and they are super imposed with the UpPyramid indicies to form the Octahedron indicies.
-The height of the DownPyramid can be determined as
-\begin{equation}
-  H_{d} =  H_{u}-1
-\end{equation}
-The height of the Octahedron $H_o$ is then a sum of $H_u$ and $H_d$. The DownPyramid alway begins with a block that is $2N_{pts}$ and grows by $N_{pts}$ on each boundary with every passing time step. The  start is a natural consequence of removing these points during the UpPyramid phase. It is completed upon passing the top of the previous UpPyramid or Octahedron at which time the next UpPyramid portion of this phase begins. The entire Octahedron is calculated in the same fashion as the UpPyramid on both CPU and GPUs. While the steps are described separately for clarity, they are performed in a single calculation step without communication between ranks. The Octahedron step is also a recursive step which is applied as many times as necessary to complete the desired simulation.
+\par
+The Octahedron is always followed by the Y-Bridge, Communicate, X-Bridge sequence. However, the communication varies in direction as the shift and communication of data is always the opposite of the former communication. This series of events is repeated as many times as is necessary to reach the final desired time of the simulation. The final phase is the aforementioned Down-Pyramid which occurs only once at the end of the simulation. The ending sequence---minus the communication---can be see in it's entirety in Figure~\ref{fig:MainTwo}. To summarize the progression of swept phases, the Up-Pyramid is calculated a single time; The Bridge and Octahedron phases are then repeated until the simulation has reached a value greater than or equal to that of the desired final time. The Down-Pyramid is executed finally to fill in the remaining portion of the solution.
 
 % Octahedron
-\begin{figure}[h!]
+\begin{figure}[!htb]
     \centering
-       \includegraphics{figs/Octahedron2.png}%[trim={2.8cm 0.9cm 0 0},clip]
-    \label{fig:OCT}
-    \caption{Calculation of the Octahedron steps (top) and communication of the result (bottom).}
+    \subfloat[Octahedron: An intermediate phase of the swept solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.png}
+      \label{fig:Octahedron}
+    }
+    \subfloat[Y-Bridge: The subsequent phase of the swept solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.png}
+       \label{fig:YBridge2}
+    }
+    \vskip
+    \subfloat[X-Bridge: The next phase of the solution process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.png}
+       \label{fig:XBridge2}
+    }
+    \subfloat[Down-Pyramid: The final phase of the swept process.]
+    {
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.png}
+       \label{fig:Down-Pyramid}
+    }
+    \caption{The intermediate and final steps of the swept solution.}
+    \label{fig:MainTwo}
 \end{figure}
 
-\par The final phase of the swept process is the DownPyramid which is fairly well described during the Octahedron phase. This is the ending phase of the simulation and is only performed a single time. The strategy is the same as that of the UpPyramid for both the CPU and GPU. The only difference is that all boundaries grow. To summarize the swept phases, the UpPyramid is calculated a single time; The Bridges and Octahedron phases are then repeated until the simulation has reached a value greater than or equal to that of the desired final time.
-The actual final time is determined by the number of "swept" steps, ($N_{ss}$) or phases that the simultation is run. This is determined by the given final time and $H_{o}$ which is the minimum time possible of a simulation. It is this way because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given affinity. In between each calculation step, a communication step occurs  which consists of shared memory data management and writing out to disk.
 
-\par The shared memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting of the data which is a strategy implemented for handling boundary blocks in the array. PySweep was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally in the direction orthogonal to the boundary (e.g. During the Octahedron phase on the boundary where $x=0$, only half the Octahedron will be formed in the x direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, a shifting strategy was developed which allows the majority of the same functions and kernels to be used. The strategy works by writing the data to designated points at the end of the array in each dimension. The shared memory array is exacly $2N_{pts}+b_{s}/2$ points larger in x and y than the given initial conditions array. The shifting of data occurs after every Octahedron phase so that the simulation oscillates between use of its region and shifted region. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of determining the extra regions and storing the extra points in memory. However, the added memory expense of this is minimal due to the strategy for writing to disk and block size restriction. It also mitigates the need for added logic to handle the natural shifting of the shapes and boundaries.
+\subsection{Data Management}
+The actual final time is determined by the number of swept steps, $S$, or phases that the simulation is run. This is determined by the given final time and $2h$ which is the minimum time possible of a simulation. It is this way because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given affinity. In between each calculation step, a communication step occurs which consists of shared memory data management and writing to disk.
 
-\par PySweep writes to disk after every Octahedron step as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write it's region to disk independently of other ranks. The shared memory array is the height of an Octahedron in time plus the order of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The first $H_{u}$ steps following the $O_{ts}$ steps are written to disk if the step completes the cycle of the specific time scheme (i.e. it is the final step in the time scheme and the values are the desired result). The data is then shifted down in the time dimensions of the array and so that the next phase can be calculated from the region or shifted region. When the write phase occurs after the shifted calculation, the data is shifted back prior to writing so that the writing does not require any conditional statements. This is also necessary for the next calculation step so it is not an added expense.
+\par The shared memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting of the data which is a strategy implemented for handling boundary blocks in the array. PySweep was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally in the direction orthogonal to the boundary (e.g. During the Octahedron phase on the boundary where $x=0$, only half the Octahedron will be formed in the x direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, a shifting strategy was developed which allows the majority of the same functions and kernels to be used. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of moving the data in memory.
 
-\par In summary of this swept rule implementation, PySweep is an extensible PDE solver that implements the swept rule in 2 dimensions on heterogeneous architecture. It consists of 2 primary steps which are calculation and communication. The calculation computes points based on a predictable patterns referenced as the phases of the simulation. The communication step is atypical as it does not communicate persay but shifts the perspective of each rank and copies the working data to a local array and then writes it into a shared memory array after the calculation step [MAKE SURE THIS IS ACCURATE, CITE]. This shifting strategy provides simple communication logic at a minimal memory expense. There are multiple phases where both steps occur during the simulation which are the UpPyramid, Bridge (X/Y), Octahedron, and DownPyramid. The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions only but updating it for other conditions would be fairly straight forward. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. There are some restrictions on the time and spatial schemes \emdash namely that the spatial stencil\emdash but it would be fairly straight forward to handle other cases. PySweep could certainly be further optimized but it is presently sufficient to test and determine the performance capabilities of the 2 dimensional heterogeneous swept rule in comparison to a traditional solver.
+\par PySweep writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write it's data to disk independently of other ranks. The shared memory array is the height of an Octahedron in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then shifted down in the time dimensions of the array and so that the next phase can be calculated from the region or shifted region. 
+
+%LEFT OFF HERE%
+When the write phase occurs after the shifted calculation, the data is shifted back prior to writing so that the writing does not require any conditional statements. This is also necessary for the next calculation step so it is not an added expense.
+
+\par In summary of this swept rule implementation, PySweep is an extensible PDE solver that implements the swept rule in 2 dimensions on heterogeneous architecture. It consists of 2 primary steps which are calculation and communication. The calculation computes points based on a predictable patterns referenced as the phases of the simulation. The communication step is atypical as it does not communicate persay but shifts the perspective of each rank and copies the working data to a local array and then writes it into a shared memory array after the calculation step [MAKE SURE THIS IS ACCURATE, CITE]. This shifting strategy provides simple communication logic at a minimal memory expense. There are multiple phases where both steps occur during the simulation which are the Up-Pyramid, Bridge (X/Y), Octahedron, and Down-Pyramid. The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions only but updating it for other conditions would be fairly straight forward. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. There are some restrictions on the time and spatial schemes \emdash namely that the spatial stencil\emdash but it would be fairly straight forward to handle other cases. PySweep could certainly be further optimized but it is presently sufficient to test and determine the performance capabilities of the 2 dimensional heterogeneous swept rule in comparison to a traditional solver.
 
 \section{Testing}
 This implementation of the swept rule was tested against a standard heterogeneous solver (i.e. communicates every time step). This solver uses the same functions provided to the swept solver as well as the same decomposition strategies. The only difference in decomposition is that the standard solver does not break the CPU region assigned to each rank into blocks for solving but simply solves all of the points provided. This actually reduces the cost of the standard solution. The standard solver stores less time steps in memory as it is not necessary to store more than the time scheme depends on. The logic to write each time step to the hdf5 array is also simpler. However, it must write more frequently because less time steps are stored. While there are optimizations that could occur for both the swept and standard solvers, it is believed that the standard solver is sufficient to benchmark the swept solver. The code for the standard solver is available in the PySweep GitHub repository.
