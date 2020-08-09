@@ -40,6 +40,14 @@
 %% `Elsevier LaTeX' style
 
 \bibliographystyle{elsarticle-num}
+
+%Macros
+\def\github{https://github.com/walkanth/pysweep}
+\def\oldCPU{s}
+\def\oldGPU{s}
+\def\newCPU{s}
+\def\newGPU{s}
+
 %%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -105,12 +113,12 @@ Cache optimization techniques differ from the swept rule as the intention is not
 The swept rule differs from communication avoidance techniques in as it does not directly involve overlapping parts of the communication.
 
 \par
-In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub at \textit{https://github.com/walkanth/pysweep}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
+In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub at \textit{\github}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
 \par
 Magee et al. created multiple 1 dimensional PDE solvers which includes GPU only and heterogeneous solvers. It was concluded that their shared memory approach typically performed better than alternative approaches. This study solved the compressible Euler equations were solved as done by Alhubail et al. \cite{Alhubail2016ThePDEs} but speed up was not obtained in all cases. This is attributed to greater usage of lower level memory and limits performance benefits of the swept rule depending on the problem \cite{Magee2018AcceleratingDecomposition}. As this study is an extension of Magee et al.'s work, it differs in mainly the dimensionality. The implementation of PySweep does utilize and extend some of the implementation strategies that showed promise in the aforementioned study.
 
 \par
-The objective of this study are to implement the swept rule in 2 dimensions on heterogeneous architecture and study the performance capabilities of such a solver based on system parameters. The first parameter of interest in the block size Magee et al. showed a dependence on the block size so it is of interest to determine the change in behavior when added another dimension which the solvers are not identical, the theory is the same and comparison can provide valuable insight into the effects of the extra dimension. Magee et al. likewise showed a performance dependence on the GPU affinity, Array size, and [READ PAPERS].
+The objective of this study was to implement the swept rule in 2 dimensions on heterogeneous architecture and study the performance capabilities of such a solver based on system parameters. The first parameter of interest in the block size Magee et al. showed a dependence on the block size so it is of interest to determine the change in behavior when added another dimension which the solvers are not identical, the theory is the same and comparison can provide valuable insight into the effects of the extra dimension. Magee et al. likewise showed a performance dependence on the GPU affinity, Array size, and [READ PAPERS].
 
 \par
 The effect of added dimensionality on these parameters is a pragmatic interest and can be considered from multiple perspectives. The primary objective is speed up of simulations requiring high performance computing (HPC) through the reduction of network latency. The swept rule is motivated by improved time to solutions of problems involving complicated phenomena frequently requiring the use of HPC systems. While many simplifications exist to reduce the dimensionality of these problems, the most practical approach is what is experienced in reality which is 3 dimensions. While this solver is not 3 dimensional, it is a step in that direction which can provide insight to the performance of the swept rule in multiple dimensions. In the case of this specific solver, it can provide insight to the performance of the heterogeneous solver in 2 dimensions that employ this latency reduction technique. This insight can offer the chance to optimize system usage and promote faster design and prototype of the aforementioned applications.
@@ -142,7 +150,7 @@ There are 4 phases that occur during the swept solution process. In the code, th
 
 \subsection{Parameters}
 \par
-The numerical scheme in both space and time directly affects the performance of the swept rule as it limits the number of steps that can be taken per phase. PySweep was implemented with only symmetrical stencils on a structured grid for simplicity. So, lets define the number of points on each side of the current point as $n$. The height $h$ of each phase except the Octahedron---or number of steps in time---is then
+The numerical scheme in both space and time directly affects the performance of the swept rule as it limits the number of steps that can be taken per phase. PySweep was implemented with only symmetrical stencils on a structured cartesian grid for simplicity. So, lets define the number of points on each side of the current point as $n$. The height $h$ of each phase except the Octahedron---or number of steps in time---is then
 \begin{equation}
     h = \bigg(\frac{b}{2n}-1\bigg)
 \end{equation}
