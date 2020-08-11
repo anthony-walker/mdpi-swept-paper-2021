@@ -5,6 +5,14 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{subfig}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \modulolinenumbers[5]
 \journal{Journal of \LaTeX\ Templates}
@@ -41,6 +49,19 @@
 
 \bibliographystyle{elsarticle-num}
 %%%%%%%%%%%%%%%%%%%%%%%
+%----------------MACROS--------------------
+\def\github{\url{https://github.com/anthony-walker/pysweep}}
+
+\def\pysweep{\texttt{PySweep}}
+\def\Swept{\texttt{Swept}}
+\def\Standard{\texttt{Standard}}
+
+\def\oldCPU{Intel Skylake Silver 4114} %20 core cpu
+\def\oldGPU{GTX 1080}
+
+\def\newCPU{Intel E5-2698v4 CPU} %20 core cpu
+\def\newGPU{DGX-S V100}
+
 
 \begin{document}
 
@@ -64,6 +85,8 @@
 %
 % \address[mymainaddress]{1600 John F Kennedy Boulevard, Philadelphia}
 % \address[mysecondaryaddress]{360 Park Avenue South, New York}
+
+
 
 \begin{abstract}
 This paper contain is a study of the swept rule in two dimensions on heterogeneous
@@ -105,7 +128,7 @@ Cache optimization techniques differ from the swept rule as the intention is not
 The swept rule differs from communication avoidance techniques in as it does not directly involve overlapping parts of the communication.
 
 \par
-In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub at \textit{https://github.com/walkanth/pysweep}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
+In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub\footnote{\github}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
 \par
 Magee et al. created multiple 1 dimensional PDE solvers which includes GPU only and heterogeneous solvers. It was concluded that their shared memory approach typically performed better than alternative approaches. This study solved the compressible Euler equations were solved as done by Alhubail et al. \cite{Alhubail2016ThePDEs} but speed up was not obtained in all cases. This is attributed to greater usage of lower level memory and limits performance benefits of the swept rule depending on the problem \cite{Magee2018AcceleratingDecomposition}. As this study is an extension of Magee et al.'s work, it differs in mainly the dimensionality. The implementation of PySweep does utilize and extend some of the implementation strategies that showed promise in the aforementioned study.
 
@@ -125,15 +148,12 @@ Hopefully, it is clear at this point that latency reduction is important in high
 %  Implementation
 %
 
-\section{Implementation}
-\subsection{Strategy}
-The implementation of the 2D swept rule on heterogeneous architecture, referred to as PySweep on GitHub, involves multiple languages, architectures, strategies, and problems which will be discussed along with decisions made during the implementation process. This solver is also paired with a more traditional (standard) solver that communicates as is necessary to complete a step. This standard solver is also avaliable in the repository for comparison. The code was developed on a workstation with 2 Nvidia GPUs (Tesla K40c and Quadro K620) and a CPU with 16 cores.
+\section{Methodology}
+
+\pysweep{} is a python package designed to solve 2D systems of PDEs on heterogeneous architecture. It comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule.
 
 \par
-PySweep was implemented primarily in python as it is a simple yet powerful high level programming language that has a multitude of open source packages used for scientific computing and is frequently used for such applications. There is also a well known GPU computing package, PyCuda, that provides a simple interface for working with Nvidia GPUs \cite{KlocknerPyCUDAGeneration}. The GPU kernels were specifically written in CUDA in lieu of using python abstractions as the abstractions tended to display decreased performance. It is believed that this slowdown is caused by more frequent communication with the CPU. Since a major part of the study was speed improvement through reduced communication, it was appropriate to write kernels in CUDA. 
-
-\par
-The CPU parallelism was implemented with a combination of mpi4py, a MPI (Message Passing Interface) package for python, and python's built-in multiprocessing module --- so the code can operate on distributed computing systems. A MPI process that controls the behavior of it's respective device is spawned for each GPU and the CPU. The CPU's MPI process will spawn sub-processes based on available resources to fully utilize the CPU. A complete list of the packages used can be found in the PySweep repository.
+\pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes.    
 
 \par Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. The swept solver and standard solver both use the same decomposition, process handling, and work allocation strategies so that the performance comparison between the two is representative of the differences between the solvers. The swept solver does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation which may affect the performance. 
 
