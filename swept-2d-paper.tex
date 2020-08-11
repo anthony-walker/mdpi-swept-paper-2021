@@ -136,16 +136,12 @@ Cache optimization techniques differ from the swept rule as the intention is not
 The swept rule differs from communication avoidance techniques in as it does not directly involve overlapping parts of the communication.
 
 \par
-<<<<<<< HEAD
-In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub at \textit{\github}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
-=======
 In this paper, PySweep, a 2 dimensional PDE solver was implemented and tested on heterogeneous (i.e. utilizes both a CPU and GPU) architecture. This solver is openly available on GitHub\footnote{\github}. This differs from past work in a few ways. The swept rule was originally developed by Alhubail et al. who published a 1 dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis shows that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. Alhubail et al. followed this work with a 2 dimensional CPU only swept PDE solver which reported speed ups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018ThePDEs}. These studies differ from this study and PySweep in multiple ways. The most prominent are the dimensionality and intended architecture.
->>>>>>> 574c2002a30ce0a6e1a07568a18c9fb6ac879fc6
 \par
 Magee et al. created multiple 1 dimensional PDE solvers which includes GPU only and heterogeneous solvers. It was concluded that their shared memory approach typically performed better than alternative approaches. This study solved the compressible Euler equations were solved as done by Alhubail et al. \cite{Alhubail2016ThePDEs} but speed up was not obtained in all cases. This is attributed to greater usage of lower level memory and limits performance benefits of the swept rule depending on the problem \cite{Magee2018AcceleratingDecomposition}. As this study is an extension of Magee et al.'s work, it differs in mainly the dimensionality. The implementation of PySweep does utilize and extend some of the implementation strategies that showed promise in the aforementioned study.
 
 \par
-The objective of this study was to implement the swept rule in 2 dimensions on heterogeneous architecture and study the performance capabilities of such a solver based on system parameters. The first parameter of interest in the block size Magee et al. showed a dependence on the block size so it is of interest to determine the change in behavior when added another dimension which the solvers are not identical, the theory is the same and comparison can provide valuable insight into the effects of the extra dimension. Magee et al. likewise showed a performance dependence on the GPU affinity, Array size, and [READ PAPERS].
+The objective of this study was to implement the swept rule in 2 dimensions on heterogeneous architecture and study the performance capabilities of such a solver based on system parameters. The first parameter of interest in the block size Magee et al. showed a dependence on the block size so it is of interest to determine the change in behavior when added another dimension which the solvers are not identical, the theory is the same and comparison can provide valuable insight into the effects of the extra dimension. Magee et al. likewise showed a performance dependence on the GPU share, Array size, and [READ PAPERS].
 
 \par
 The effect of added dimensionality on these parameters is a pragmatic interest and can be considered from multiple perspectives. The primary objective is speed up of simulations requiring high performance computing (HPC) through the reduction of network latency. The swept rule is motivated by improved time to solutions of problems involving complicated phenomena frequently requiring the use of HPC systems. While many simplifications exist to reduce the dimensionality of these problems, the most practical approach is what is experienced in reality which is 3 dimensions. While this solver is not 3 dimensional, it is a step in that direction which can provide insight to the performance of the swept rule in multiple dimensions. In the case of this specific solver, it can provide insight to the performance of the heterogeneous solver in 2 dimensions that employ this latency reduction technique. This insight can offer the chance to optimize system usage and promote faster design and prototype of the aforementioned applications.
@@ -165,14 +161,24 @@ Hopefully, it is clear at this point that latency reduction is important in high
 \pysweep{} is a python package designed to solve 2D systems of PDEs on heterogeneous architecture. It comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule.
 
 \par
-\pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes.    
+\pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. 
+
+\par
+GPU's execute code on a "blockwise" basis, i.e., they solve all the points of a given 3 dimensional block simultaneously. This makes the \texttt{blocksize},(x,y,z), a parameter that impacts the performance. This
+
+\par
+The work load of each process' GPU and CPU is determined by the GPU share---a quantity that designates the amount of work to be handled by the GPU. A share of 1 corresponds to the GPU handling 100\% of the work. This can be expressed as
+\begin{equation}
+    s = \frac{G}{W}
+\end{equation}
+where $s$ is the share, $G$ is the work of the GPU, and $W$ is the total work. In this implementation, the share does not account for the number of GPUs or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10^2$ blocks and $a=0.5$ then $5\times10$ blocks will be deemed as GPU work and the remainder is CPU work. These portions of work are then divided amongst the available resources of each type. This decomposition strategy requires the array dimensions $(n, m)$ be equally divisible by the given block size and, it will limit the codes scalability. However, it is sufficient for the purposes of this study and can be modified as is necessary for future studies. 
+
 
 \par Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. The swept solver and standard solver both use the same decomposition, process handling, and work allocation strategies so that the performance comparison between the two is representative of the differences between the solvers. The swept solver does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation which may affect the performance. 
 
 \par
 There are 4 phases that occur during the swept solution process. In the code, these phases are referred to as Up-Pyramid, Bridge (X or Y), Octahedron, and Down-Pyramid so that convention will be continued here. They are so named as these shapes are produced during the solution procedure if you visual the solution's progression in 3 dimensions (x,y,t); this will be demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem.  
 
-\subsection{Parameters}
 \par
 The numerical scheme in both space and time directly affects the performance of the swept rule as it limits the number of steps that can be taken per phase. PySweep was implemented with only symmetrical stencils on a structured cartesian grid for simplicity. So, lets define the number of points on each side of the current point as $n$. The height $h$ of each phase except the Octahedron---or number of steps in time---is then
 \begin{equation}
@@ -195,12 +201,6 @@ where $f$ is any positive integer such that $(2n+1)^2 < b < T_{max}$ and $n$ is 
   \ceil[\bigg]{1+\frac{1}{2n}} \leq f \leq \frac{16}{n}.
 \end{equation}
 
-\par
-The GPU affinity---which designates the amount of work to be handled by the GPU---also plays a role in performance. An affinity of 1 corresponds to the GPU handling 100\% of the work. This can be expressed as
-\begin{equation}
-    a = \frac{G}{W}
-\end{equation}
-where $a$ is the affinity, $G$ is the work of the GPU, and $W$ is the total work. In this implementation, the affinity does not account for the number of GPUs or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10^2$ blocks and $a=0.5$ then $5\times10$ blocks will be deemed as GPU work and the remainder is CPU work. These portions of work are then divided amongst the available resources of each type. This decomposition strategy requires the array dimensions $(n, m)$ be equally divisible by the given block size and, it will limit the codes scalability. However, it is sufficient for the purposes of this study and can be modified as is necessary for future studies. 
 
 \subsection{Swept Solution Process}
 \par
@@ -282,7 +282,7 @@ The Octahedron is always followed by the Y-Bridge, Communicate, X-Bridge sequenc
 \end{figure}
 
 \subsection{Data Management}
-The actual final time is determined by the number of swept steps, $S$, or phases that the simulation is run. This is determined by the given final time and $2h$, which is the minimum time possible of a simulation. It is this way because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given affinity. In between each calculation step, a communication step occurs which consists of shared memory data management and writing to disk.
+The actual final time is determined by the number of swept steps, $S$, or phases that the simulation is run. This is determined by the given final time and $2h$, which is the minimum time possible of a simulation. It is this way because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. In between each calculation step, a communication step occurs which consists of shared memory data management and writing to disk.
 
 \par The shared memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting of the data which is a strategy implemented for handling boundary blocks in the array. PySweep was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally in the direction orthogonal to the boundary (e.g. During the Octahedron phase on the boundary where $x=0$, only half the Octahedron will be formed in the x direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, a data shifting strategy was implemented which allows the majority of the same functions and kernels to be used. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of moving the data in memory.
 
