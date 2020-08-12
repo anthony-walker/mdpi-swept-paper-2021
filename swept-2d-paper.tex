@@ -6,6 +6,7 @@
 \usepackage[english]{babel}
 \usepackage{subfig}
 \usepackage{hyperref}
+\usepackage{amsmath}
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -164,7 +165,18 @@ Hopefully, it is clear at this point that latency reduction is important in high
 \pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. 
 
 \par
-GPU's execute code on a "blockwise" basis, i.e., they solve all the points of a given 3 dimensional block simultaneously. This makes the \texttt{blocksize},(x,y,z), a parameter that impacts the performance. This
+GPU's execute code on a "blockwise" basis, i.e., it solves all the points of a given 3 dimensional block simultaneously. In this paper, the dimensions of these blocks is referred to as \texttt{block size} or $b$---a single integer that represents the x and y dimension. The z dimension of the block is always unity because the solver is two dimensional. The block size is a parameter of interest because it affects the performance of the swept rule by limiting the number of steps during any given swept phase. It also provides a natural basis for the decomposition of the data and imposes some further restrictions in the process.
+
+\par 
+Hardware restrictions, $b_max$, aside, the block size is restricted by the software in a couple of ways. First, the block size is restricted to being square ($x=y$) because the shortest dimension block dimension limits the number of steps for the swept rule. Next the block is limited by equation~\ref{block-restriction}, where $f$ is any positive integer and $n$ is the maximum number of points on either side of any point $j$ used to calculate the derivatives.
+\begin{equation}
+\label{block-restriction}
+    b  = (2nf)^2 \ni b_{max} \geq b \geq (2n+1)^2.
+\end{equation}
+ In the former example,
+\begin{equation}
+  \ceil[\bigg]{1+\frac{1}{2n}} \leq f \leq \frac{16}{n}.
+\end{equation}
 
 \par
 The work load of each process' GPU and CPU is determined by the GPU share---a quantity that designates the amount of work to be handled by the GPU. A share of 1 corresponds to the GPU handling 100\% of the work. This can be expressed as
@@ -186,20 +198,7 @@ The numerical scheme in both space and time directly affects the performance of 
 \end{equation}
 for a given block size $b$. The height of the Octahedron is $2h$. This height is effectively reduced by the number of intermediate steps required by the temporal scheme e.g. if a second order Runge-Kutta is used in time then the effective height is $h/2$ because RK2 takes two intermediate steps. This is not necessarily detrimental to performance as a typical solver is subjected to more communications in this case as well.
 
-\par
-The block size is a parameter which determines how many threads will be executed in a group referred to as a block. This parameter plays a role in the performance of the swept rule on heterogeneous architecture as it directly limits the number of steps that can be taken by any swept phase. The block size is restricted by both the code and the hardware used. The workstation GPU, a Tesla K40c, restricts blocks to a maximum of $1024$ threads per block ($T_{max}$).
-The block size, $b$, is then restricted by the code to being square i.e. the x and y dimension of the block must be the same. The x and y dimensions of the block can be found as
-\begin{equation}
-    b_x = b_y = \sqrt{b}.
-\end{equation}
-This was done because the number of steps taken in time via the swept rule is directly limited by the minimum dimension of the block. The block is finally limited by the expression
-\begin{equation}
-    b  = (2nf)^2,
-\end{equation}
-where $f$ is any positive integer such that $(2n+1)^2 < b < T_{max}$ and $n$ is as previously described. In the former example,
-\begin{equation}
-  \ceil[\bigg]{1+\frac{1}{2n}} \leq f \leq \frac{16}{n}.
-\end{equation}
+
 
 
 \subsection{Swept Solution Process}
