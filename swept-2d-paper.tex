@@ -158,8 +158,7 @@ Hopefully, it is clear at this point that latency reduction is important in high
 %
 
 \section{Methodology}
-
-\pysweep{} is a python package designed to solve 2D systems of PDEs on heterogeneous architecture. It comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule.
+\pysweep{} is a python package designed to solve 2D systems of PDEs on heterogeneous architecture. It comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule. Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. \Swept{} and \Standard both use the same decomposition, process handling, and work allocation code so that the performance comparison between solvers is representative of swept rule performance. \Swept{} does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation. 
 
 \par
 \pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. 
@@ -168,37 +167,47 @@ Hopefully, it is clear at this point that latency reduction is important in high
 GPU's execute code on a "blockwise" basis, i.e., it solves all the points of a given 3 dimensional block simultaneously. In this paper, the dimensions of these blocks is referred to as \texttt{block size} or $b$---a single integer that represents the x and y dimension. The z dimension of the block is always unity because the solver is two dimensional. The block size is a parameter of interest because it affects the performance of the swept rule by limiting the number of steps during any given swept phase. It also provides a natural basis for the decomposition of the data and imposes some further restrictions in the process.
 
 \par 
-Hardware restrictions, $b_max$, aside, the block size is restricted by the software in a couple of ways. First, the block size is restricted to being square ($x=y$) because the shortest dimension block dimension limits the number of steps for the swept rule. Next the block is limited by equation~\ref{block-restriction}, where $f$ is any positive integer and $n$ is the maximum number of points on either side of any point $j$ used to calculate the derivatives.
+Hardware restrictions, $b_max$, aside, the block size is restricted by the software in a couple of ways. First, the block size is restricted to being square ($x=y$) because the shortest dimension block dimension limits the number of steps for the swept rule. Next the block is limited by equation~\ref{block-restriction}, where $k$ is any positive integer and $n$ is the maximum number of points on either side of any point $j$ used to calculate the derivatives.
+\begin{equation}
+  \label{k-restriction}
+  k \in Z \ni b > 2 FIX ME 
+\end{equation}
 \begin{equation}
 \label{block-restriction}
-    b  = (2nf)^2 \ni b_{max} \geq b \geq (2n+1)^2.
-\end{equation}
- In the former example,
-\begin{equation}
-  \ceil[\bigg]{1+\frac{1}{2n}} \leq f \leq \frac{16}{n}.
+    b  = 2nk \ni 2n+1 \leq b \leq b_{max}.
 \end{equation}
 
+Constraining the block size by this relation ensures that the number of steps in a given phase will be the same in all subsequent phases. 
+
 \par
-The work load of each process' GPU and CPU is determined by the GPU share---a quantity that designates the amount of work to be handled by the GPU. A share of 1 corresponds to the GPU handling 100\% of the work. This can be expressed as
+The block ideology provides a natural unit for describing the amount of work, e.g, an $16\,x\,16$ array has four $8\,x\,8$ blocks to solve. As such, the work load of each process' GPU and CPU is determined by the GPU share, $s$, on a blockwise basis---a quantity that designates the amount of work to be handled by the GPU. A share of 1 corresponds to the GPU handling 100\% of the work. This is expressed mathematically in equation~\ref{share-equation} where $G$, $C$, and $W$ represent the number of GPU blocks, CPU blocks, and total blocks respectively. This parameter is of interest because it directly impacts the performance of the solvers.
 \begin{equation}
-    s = \frac{G}{W}
+    \label{share-equation}
+    s = \frac{G}{W} = 1-\frac{C}{W}
 \end{equation}
-where $s$ is the share, $G$ is the work of the GPU, and $W$ is the total work. In this implementation, the share does not account for the number of GPUs or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10^2$ blocks and $a=0.5$ then $5\times10$ blocks will be deemed as GPU work and the remainder is CPU work. These portions of work are then divided amongst the available resources of each type. This decomposition strategy requires the array dimensions $(n, m)$ be equally divisible by the given block size and, it will limit the codes scalability. However, it is sufficient for the purposes of this study and can be modified as is necessary for future studies. 
-
-
-\par Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. The swept solver and standard solver both use the same decomposition, process handling, and work allocation strategies so that the performance comparison between the two is representative of the differences between the solvers. The swept solver does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation which may affect the performance. 
+In this implementation, the share does not account for the number of GPUs or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10$ blocks and $s=0.5$ then $5$ blocks will be deemed as GPU work and the remainder is CPU work. These portions of work are then divided amongst the available resources of each type. 
 
 \par
-There are 4 phases that occur during the swept solution process. In the code, these phases are referred to as Up-Pyramid, Bridge (X or Y), Octahedron, and Down-Pyramid so that convention will be continued here. They are so named as these shapes are produced during the solution procedure if you visual the solution's progression in 3 dimensions (x,y,t); this will be demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem.  
+Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restrict them to being evenly divisible by the block size for ease of decomposition. Square arrays are also only considered---so array size is represented by a single number which is the number of points in the x and y directions. Finally, we chose array sizes that would equally balance and utlitize the full capacity of the nodes based on the share values.
 
 \par
-The numerical scheme in both space and time directly affects the performance of the swept rule as it limits the number of steps that can be taken per phase. PySweep was implemented with only symmetrical stencils on a structured cartesian grid for simplicity. So, lets define the number of points on each side of the current point as $n$. The height $h$ of each phase except the Octahedron---or number of steps in time---is then
+To summarize the performance parameters, array size, block size, share, and the hardware were all varied in this study. Array sizes of [FIXME] were used. Block sizes of [FIXME] were used. Share was varied from 0 to 100\% at intervals of 5\% initially. Intervals with more potential were further studied with intervals of 1\%. Newer and older hardware were selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on the hardware. The new hardware consisted of \newGPU{} GPUs and \newCPU{} CPUs; the older hardware consisted of \oldGPU{} GPUs and \oldCPU{} CPUs;
+
+\par
+The numerical scheme used to solve these equation(s) directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication.
+As such, the aforementioned parameters were applied to solving the unsteady compressible Euler equations and the unsteady heat diffusion equation as was done in other works regarding the swept rule \cite{Magee2018AcceleratingDecomposition,Alhubail2016ThePDEs,Alhubail2018ThePDEs, MYPAPERHERE}. The compressible Euler equations were applied to the isentropic Euler vortex to solving 
+
+\pysweep{} was implemented with only symmetrical stencils on a structured cartesian grid for simplicity.
+
+\par
+There are four phases that occur during the swept solution process. In the code, these phases are referred to as Up-Pyramid, Bridge (X or Y), Octahedron, and Down-Pyramid so that convention will be continued here. They are so named as these shapes are produced during the solution procedure if you visual the solution's progression in 3 dimensions (x,y,t); this will be demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem.  
+
+The height $h$ of each phase except the Octahedron---or number of steps in time---is then defined by equation~\ref{height-equation}.
 \begin{equation}
+  \label{height-equation}
     h = \bigg(\frac{b}{2n}-1\bigg)
 \end{equation}
-for a given block size $b$. The height of the Octahedron is $2h$. This height is effectively reduced by the number of intermediate steps required by the temporal scheme e.g. if a second order Runge-Kutta is used in time then the effective height is $h/2$ because RK2 takes two intermediate steps. This is not necessarily detrimental to performance as a typical solver is subjected to more communications in this case as well.
-
-
+for a given block size $b$. The height of the Octahedron is $2h$.
 
 
 \subsection{Swept Solution Process}
