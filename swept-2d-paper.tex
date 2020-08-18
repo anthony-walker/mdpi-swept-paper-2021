@@ -325,12 +325,12 @@ The numerical and analytical solutions are graphically compared in figure~\ref{f
     \label{fig:heatSurface}
 \end{figure}
 
-We measured performance of the swept rule applied to the heat diffusion equation by speed up of the swept rule, $S$, as a function of array size, block size, and share. 
+We measured performance of the swept rule applied to the heat diffusion equation by speed up of the swept rule, $S$, as a function of array size, block size, and share is found based on the run time, $R_i$, of a simulation $i$. 
 \begin{equation}
-    S = \frac{clock time of standard simulation}{clock time of swept simulation}
+    S = \frac{R_{standard}}{R_{swept}}
 \end{equation}
 The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedup} and~\ref{fig:oldSpeedup} for the two sets of hardware as described in section~\ref{parameters-section}. 
-A third contour of speedup comparison, $S_{1}/S_{2}$, is shown in Figure~\ref{fig:heatHardwareComp} to compare the performance across  the differing hardware. In these figures, a black dot with a white border represents the optimal case and a white dot with a black border represents the worst case. Finally, this section is concluded with Figure~\ref{fig:heatTimeStep} which presents $S$ for both sets of hardware as a function of the number of time steps. 
+A third contour of speedup is shown in Figure~\ref{fig:heatHardwareComp} to compare the performance across  the differing hardware. This speed up is found as $R_{swept,2}/R_{swept,1}$. In these figures, a black dot with a white border represents the optimal case and a white dot with a black border represents the worst case. Finally, this section is concluded with Figure~\ref{fig:heatTimeStep} which presents $S$ for both sets of hardware as a function of the number of time steps. 
 
 \begin{figure}[htb!]
     \centering
@@ -350,12 +350,14 @@ In Figure~\ref{fig:newSpeedup} it is clear that the performance of the swept rul
 
 In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fig:newSpeedup}. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. 
 
-\begin{figure}
+\begin{figure}[htb!]
     \centering
-    \includegraphics{figs/hardwareSpeedupHeat.pdf}
+    \includegraphics[scale=0.7]{figs/hardwareSpeedupHeat.pdf}
     \caption{Hardware speed up comparison for the heat diffusion equation.}
     \label{fig:heatHardwareComp}
 \end{figure}
+
+In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two---at best it is equivalent. It seems to be particularly worse at lower block sizes over a large range of shares. Specifically, shares of 25\% to 100\% are the worst.
 
 \begin{figure}
     \centering
@@ -373,9 +375,13 @@ In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fi
 
 \section{Discussion}
 \label{discussion-section}
+In regards to the heat diffusion equation, we see an overall range of speed up from 
+
 
 \section{Conclusions}
 \label{conclusions-section}
+
+
 
 \section{Acknowledgements}
 This material is based upon work supported by NASA under award No. NNX15AU66A under the technical monitoring of Drs. Eric Nielsen and Mujeeb Malik. We also gratefully acknowledge the support of NVIDIA Corporation, who donated a
