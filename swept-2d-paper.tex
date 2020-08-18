@@ -157,7 +157,7 @@ Hopefully, it is clear at this point that latency reduction is important in high
 %
 \section{Methodology}
 \label{methods-section}
-\subsection{Implementation and Objectives}
+\subsection{Implementation \ Objectives}
 \pysweep{} comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule. Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. \Swept{} and \Standard{} both use the same decomposition, process handling, and work allocation code so that a performance comparison between solvers is representative of swept rule performance. \Swept{} does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation. 
 
 \par
@@ -169,7 +169,7 @@ Hopefully, it is clear at this point that latency reduction is important in high
     \item the impact of input parameters on its' performance.
 \end{enumerate}
 
-\subsection{Parameters and Testing}
+\subsection{Parameters \& Testing}
 \label{parameters-section}
 
 GPU's execute code on a "block-wise" basis, i.e., it solves all the points of a given 3 dimensional block simultaneously. We refer to the dimensions of these blocks as \texttt{block size} or $b$---a single integer that represents the x and y dimension. The z dimension of the block was always unity because the solver is two dimensional. The block size is a parameter of interest because it affects the performance of the swept rule by limiting the number of steps between communications. It also provides a natural basis for the decomposition of the data and imposes some further restrictions in the process.
@@ -197,10 +197,10 @@ The numerical scheme used to solve these equation(s) directly affects the perfor
 As such, the aforementioned parameters were applied to solving the unsteady compressible Euler equations and the unsteady heat diffusion equation as was done in other works regarding the swept rule \cite{Magee2018AcceleratingDecomposition,Alhubail2016ThePDEs,Alhubail2018ThePDEs, Magee2020ApplyingSystems}. The compressible Euler equations were applied to the isentropic Euler vortex and solved using a second order Runge-Kutta in time and a five point finite volume method in each spatial direction with a minmod flux limiter and Roe approximate Reimann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. The heat diffusion equation was applied to an analytical problem and solved using forward Euler method in time and a three point finite difference in each spatial direction. Further details on these methods and the associated problems is provided in Appendix \ref{AppendixA}.
 
 \par
-To summarize the performance parameters, array size, block size, share, and the hardware were all varied in this study. Array sizes of [160, 320, 480, 640, 800, 960, 1120] were used to make the total number of points span a few orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\% initially. Intervals with more potential were further studied with intervals of 1\%. Along with these parameters, we advanced each problem 500 time steps on two different sets of hardware.
+To summarize the performance parameters, array size, block size, share, and the hardware were all varied in this study. Array sizes of [160, 320, 480, 640, 800, 960, 1120] were used to make the total number of points span a few orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. Along with these parameters, we advanced each problem 500 time steps on two different sets of hardware.
 
 \par
-Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs and, the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. Further information on these devices is located in Appendix~\ref{AppendixB} or the sources \cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}. Each of these sets were used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}.
+Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs and, the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in Appendix~\ref{AppendixB} or the sources \cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}. Each of these sets were used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}.
 
 \subsection{Swept Solution Process}
 \label{swept-process-section}
@@ -231,23 +231,23 @@ Depending on the decomposition strategy, a large portion of the Bridges can be p
     \centering
     \subfloat[\Up{}: The first phase of the swept solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.pdf}
       \label{fig:Up-Pyramid}
     }
     \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.pdf}
        \label{fig:YBridge}
     }
     
     \subfloat[The first communication of the solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.pdf}
        \label{fig:Comm1}
     }
     \subfloat[\Xb{}: The subsequent phase of the swept solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.pdf}
        \label{fig:Xbridge}
     }
     \caption{The first four steps in the swept solution process.}
@@ -267,23 +267,23 @@ To summarize the progression of swept phases, the \Up{} was calculated a single 
     \centering
     \subfloat[\Oct{}: An intermediate phase of the swept solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.pdf}
       \label{fig:Octahedron}
     }
     \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.pdf}
        \label{fig:YBridge2}
     }
 
     \subfloat[\Xb{}: The next phase of the solution process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.pdf}
        \label{fig:XBridge2}
     }
     \subfloat[\Down{}: The final phase of the swept process.]
     {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.png}
+      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.pdf}
        \label{fig:Down-Pyramid}
     }
     \caption{The intermediate and final steps of the swept solution.}
@@ -305,18 +305,74 @@ The solver has a few restrictions based on architecture and implementation which
 \section{Results}
 \label{results-section}
 
-\subsection{Isentropic Euler Vortex}
-\label{eulerVortexResults}
-
 \subsection{Heat Diffusion Equation}
 \label{hdeResults}
+The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space which gives the update formula shown in equation~\ref{heat-update}. We  validated the numerical solution against equation~\ref{heat-analyt}.
+\begin{equation}
+    \label{heat-update}
+    T_{i,j}^{k+1} = T_{i,j}^{k}+\frac{\alpha \Delta t}{\Delta x^2}\big(T_{i+1,j}^{k}-2T_{i,j}^{k}+T_{i-1,j}^{k}\big)+\frac{\alpha \Delta t}{\Delta y^2}\big(T_{i,j+1}^{k}-2T_{i,j}^{k}+T_{i,j-1}^{k}\big)
+\end{equation}
+\begin{equation}
+\label{heat-analyt}
+    T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
+\end{equation}
+The numerical and analytical solutions are graphically compared in figure~\ref{fig:heatSurface} and behave as expected.
 
+\begin{figure}
+    \centering
+    \includegraphics{}
+    \caption{Heat Diffusion}
+    \label{fig:heatSurface}
+\end{figure}
 
-\subsection{Swept Performance}
-\label{sweptResults}
+We measured performance of the swept rule applied to the heat diffusion equation by speed up of the swept rule, $S$, as a function of array size, block size, and share. 
+\begin{equation}
+    S = \frac{clock time of standard simulation}{clock time of swept simulation}
+\end{equation}
+The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedup} and~\ref{fig:oldSpeedup} for the two sets of hardware as described in section~\ref{parameters-section}. 
+A third contour of speedup comparison, $S_{1}/S_{2}$, is shown in Figure~\ref{fig:heatHardwareComp} to compare the performance across  the differing hardware. In these figures, a black dot with a white border represents the optimal case and a white dot with a black border represents the worst case. Finally, this section is concluded with Figure~\ref{fig:heatTimeStep} which presents $S$ for both sets of hardware as a function of the number of time steps. 
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[scale=0.7]{figs/speedUpheatNew.pdf}
+    \caption{Swept rule speed up results with \newGPU{} GPUs and \newCPU{} CPUs.}
+    \label{fig:newSpeedup}
+\end{figure}
+
+In Figure~\ref{fig:newSpeedup} it is clear that the performance of the swept rule diminishes as the array size is increased. However, it does seem to approach a limit to this decrease on the maximum array size. Shares greater than approximately 70\% seem to contain the best as well as the worst cases. It also seems that better performance is obtained by lower block sizes.
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[scale=0.7]{figs/speedUpheatOld.pdf}
+    \caption{Swept rule speed up results with \oldGPU{} GPUs and \oldCPU{} CPUs.}
+    \label{fig:oldSpeedup}
+\end{figure}
+
+In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fig:newSpeedup}. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. 
+
+\begin{figure}
+    \centering
+    \includegraphics{}
+    \caption{Hardware speed up comparison for the heat diffusion equation.}
+    \label{fig:heatHardwareComp}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics{}
+    \caption{Caption}
+    \label{fig:heatTimeStep}
+\end{figure}
+
+\subsection{Compressible Euler's Equations}
+\label{eulerVortexResults}
+
 
 \subsection{Hardware Comparison}
 \label{hardwareResults}
+
+\section{Discussion}
+\label{discussion-section}
 
 \section{Conclusions}
 \label{conclusions-section}
