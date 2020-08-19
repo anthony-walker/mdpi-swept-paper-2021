@@ -133,7 +133,7 @@ In this article we describe the implementation and performance of a two dimensio
 \par The latency barrier has been approached in many ways; the most closely related to this study being other swept rule studies which involve multiple dimensions and architectures but not the combination of the two \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}. This technique is also related to parallel-in-time methods, cache optimization techniques, and communication avoidance (CA) algorithms but there are technical differences in each of the strategies.
 
 \par
-Parallel-in-time methods differ from the swept rule in the sense that it is not iterative and they are attempting to parallelize the temporal direction \cite{Gander201550Integration}. There are many examples of parallel-in-time methods such as multigrid-reduction-in-time, Parareal, adaptive Parareal, Parareal with local time integrators, PFASST, and interwoven PFASST with multigrid \cite{Falgout2014ParallelMultigrid,Lions2013Resolution,Maday2020AnAlgorithm,Wu2018Parareal,EmmettTowardEquations,MinionINTERWEAVINGMULTIGRID}. All of these methods are variations of the core concept of parallel in time methods. For example, Parareal is one of the more popular parallel-in-time methods; it works by iterating over a series of course and fine grids with initial guesses to parallelize the problem \cite{Lions2013Resolution}. However, there are some stability concerns with Parareal that are addressed by local time integrators \cite{Wu2018Parareal}. These methods have the same goal of the swept rule but achieve that goal differently. Cache optimization techniques are similar in this way that they have the same goal but achieve it differently by optimizing communication not avoiding it \cite{Kowarschik2003AnAlgorithms}.
+Parallel-in-time methods differ from the swept rule in the sense that it is not iterative and they are attempting to parallelize the temporal direction \cite{Gander201550Integration}. There are many examples of parallel-in-time methods such as multigrid-reduction-in-time, Parareal, adaptive Parareal, Parareal with local time integrators, PFASST, and interwoven PFASST with multigrid \cite{Falgout2014ParallelMultigrid,Lions2013Resolution,Maday2020AnAlgorithm,Wu2018Parareal,EmmettTowardEquations,MinionINTERWEAVINGMULTIGRID,Hahne2020PyMGRIT:MGRIT}. All of these methods are variations of the core concept of parallel in time methods. For example, Parareal is one of the more popular parallel-in-time methods; it works by iterating over a series of course and fine grids with initial guesses to parallelize the problem \cite{Lions2013Resolution}. However, there are some stability concerns with Parareal that are addressed by local time integrators \cite{Wu2018Parareal}. These methods have the same goal of the swept rule but achieve that goal differently. Cache optimization techniques are similar in this way that they have the same goal but achieve it differently by optimizing communication not avoiding it \cite{Kowarschik2003AnAlgorithms}.
 
 \par
 The swept rule is perhaps most closely related to communication avoidance (CA) techniques. The swept rule differs from CA techniques in as it does not directly involve overlapping parts or redundant operations. There are also varying degrees of communication avoidance algorithms and many are linear algebra focused. The swept rule is particularly focused on the solution of PDEs. Communication avoiding Kyrlov subspace methods, minimized communication LU and QR factorization methods, and communication avoiding eigenvalue solvers \cite{DemmelAvoidingComputations, Ballard2011MinimizingAlgebra,BaboulinAMachines,Khabou2012LUVersion,SolomonikAHoefler}. 
@@ -339,7 +339,7 @@ A third contour of speedup is shown in Figure~\ref{fig:heatHardwareComp} to comp
     \label{fig:newSpeedup}
 \end{figure}
 
-In Figure~\ref{fig:newSpeedup} it is clear that the performance of the swept rule diminishes as the array size is increased. However, it does seem to approach a limit to this decrease on the maximum array size. Shares greater than approximately 70\% seem to contain the best as well as the worst cases. It also seems that better performance is obtained by lower block sizes.
+In Figure~\ref{fig:newSpeedup} there is an average speed up of 1.183. It is clear that the performance of the swept rule diminishes as the array size is increased. However, it does seem to approach a limit to this decrease on the maximum array size. Shares greater than approximately 70\% seem to contain the best as well as the worst cases. It also seems that better performance is obtained by lower block sizes.
 
 \begin{figure}[htb!]
     \centering
@@ -348,7 +348,7 @@ In Figure~\ref{fig:newSpeedup} it is clear that the performance of the swept rul
     \label{fig:oldSpeedup}
 \end{figure}
 
-In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fig:newSpeedup}. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. 
+In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fig:newSpeedup} with an average speedup of 1.118. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. 
 
 \begin{figure}[htb!]
     \centering
@@ -357,7 +357,7 @@ In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fi
     \label{fig:heatHardwareComp}
 \end{figure}
 
-In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two---at best it is equivalent. It seems to be particularly worse at lower block sizes over a large range of shares. Specifically, shares of 25\% to 100\% are the worst.
+In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two with an average speed up of 0.849---at best it is equivalent. It seems to be particularly worse at lower block sizes over a large range of shares. Specifically, shares of 25\% to 100\% are the worst.
 
 \begin{figure}
     \centering
@@ -375,7 +375,19 @@ In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistentl
 
 \section{Discussion}
 \label{discussion-section}
-In regards to the heat diffusion equation, we see an overall range of speed up from 
+In regards to the heat diffusion equation, we see an overall range of speed up from [0.225,1.602] independent of the hardware. The speed up of 0.225 seems to be an outlier in this case because the next lowest speed up 0.772. This pales in comparison to the one dimensional heterogeneous version which reported 1.9 to 23 times speed up and, the one dimensional GPU version which reported 2 to 9 times speed up for similar applications \cite{Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}. Regardless, there is evidence that shows that the swept rule can be both helpful and harmful. We do believe however that optimizations can be made to maximize the speed up and minimize slow down. 
+\par
+We believe that the trend among array sizes exists because of the method for managing the boundaries. In this method, data is shifted between shared memory arrays to align computations appropriately for the avoidance of complex boundary logic in developing the solution. However, once the array becomes large, this method's performance seems to deteriorate. To optimize this, we feel that changing each process's perspective would in lieu of shifting data would provide a much more scalable method. This however is untested due to project time constraints. 
+\par
+Typically GPUs out perform CPUs for simple logic problems. So, it is surprising to see that lower shares have superior performance in some cases. We believe that this is the case for \pysweep{} because of thread divergence. Specifically, thread divergence grows as the block size grows because less threads are actively being used in computation when applying a conditional approach. However, this is counter-intuitive to the swept rule because larger block sizes have less communication. So, we believe that any speed up gained during the swept calculation is being dominated by the slow down from thread divergence.
+\par
+We believe that this problem could be fixed by an algorithmic approach in which computations are sorted such that the program can proceed without conditional statements and maximize thread usage. This however is substantially more complicated than the current setup and would take quite a bit of development on the algorithm side to implement.
+
+
+\par
+A final point of interest between both problems is the implementation language. Compiled languages are typically much faster than interpretive languages. The GPU portion of \pysweep{} was written in CUDA but
+
+
 
 
 \section{Conclusions}
