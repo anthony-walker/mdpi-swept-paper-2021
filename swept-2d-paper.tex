@@ -8,6 +8,7 @@
 \usepackage{subfig}
 \usepackage{hyperref}
 \usepackage{amsmath}
+\usepackage[section]{placeins}
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -317,7 +318,7 @@ The heat diffusion equation was solved numerically using Forward Euler in time a
 \label{heat-analyt}
     T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
 \end{equation}
-The numerical and analytical solutions are graphically compared in figure~\ref{fig:heatSurface} and behave as expected. Stability of the algorithm requires a very small time step so changes between the plots in figure~\ref{fig:heatSurface} are subtle even over a large number of time steps.
+The numerical and analytical solutions are graphically compared in Figure~\ref{fig:heatSurface} and behave as expected. Stability of the algorithm requires a very small time step so changes between the plots in Figure~\ref{fig:heatSurface} are subtle even over a large number of time steps.
 
 \begin{figure}[htb!]
     \centering
@@ -330,26 +331,26 @@ We measured performance of the swept rule applied to the heat diffusion equation
 \begin{equation}
     S = \frac{R_{standard}}{R_{swept}}
 \end{equation}
-The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedup} and~\ref{fig:oldSpeedup} for the two sets of hardware as described in section~\ref{parameters-section}. 
+The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} for the two sets of hardware as described in section~\ref{parameters-section}. 
 A third contour of speedup is shown in Figure~\ref{fig:heatHardwareComp} to compare the performance across  the differing hardware. This speed up is found as $R_{swept,2}/R_{swept,1}$. In these figures, a black dot with a white border represents the worst case and a white dot with a black border represents the best case.
 
 \begin{figure}[htb!]
     \centering
     \includegraphics[scale=0.7]{figs/speedUpheatNew.pdf}
     \caption{Swept rule speed up results with \newGPU{} GPUs and \newCPU{} CPUs.}
-    \label{fig:newSpeedup}
+    \label{fig:newSpeedupHeat}
 \end{figure}
 
-In Figure~\ref{fig:newSpeedup} there is an average speed up of 1.1907. It is clear that the performance of the swept rule diminishes as the array size is increased. The largest areas of performance increases generally lie above a share of 50\% and along the blocksize of 16. The majority of best cases lie between 90-100\% share and the 12-24 blocksize range. The majority of worst cases lie between 90-100\% share and along the blocksize limits 8 and 32.
+In Figure~\ref{fig:newSpeedupHeat} there is an average speed up of 1.1907. It is clear that the performance of the swept rule diminishes as the array size is increased. The largest areas of performance increases generally lie above a share of 50\% and along the blocksize of 16. The majority of best cases lie between 90-100\% share and the 12-24 blocksize range. The majority of worst cases lie between 90-100\% share and along the blocksize limits 8 and 32.
 
 \begin{figure}[htb!]
     \centering
     \includegraphics[scale=0.7]{figs/speedUpheatOld.pdf}
     \caption{Swept rule speed up results with \oldGPU{} GPUs and \oldCPU{} CPUs.}
-    \label{fig:oldSpeedup}
+    \label{fig:oldSpeedupHeat}
 \end{figure}
 
-In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fig:newSpeedup} with an average speedup of 1.1147. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. The majority of best cases occur at or below a 50\% share and between blocksizes 12-24. The majority of worst cases lie between 80-100\% share and between blocksizes of 16-24 with a couple cases being on upper limit.
+In Figure~\ref{fig:oldSpeedupHeat}, we see some differing trends than Figure~\ref{fig:newSpeedupHeat} with an average speedup of 1.1147. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. The majority of best cases occur at or below a 50\% share and between blocksizes 12-24. The majority of worst cases lie between 80-100\% share and between blocksizes of 16-24 with a couple cases being on upper limit.
 
 \begin{figure}[htb!]
     \centering
@@ -358,15 +359,56 @@ In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fi
     \label{fig:heatHardwareComp}
 \end{figure}
 
-In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two with an average speed up of 0.849---at best it is equivalent. It seems to be particularly worse at lower block sizes over a large range of shares. Specifically, shares of 25\% to 100\% are the worst.
-
+In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two with an average speed up of 0.8481---at best it is approximately 1.1 times faster. Speedup is worst with shares above approximately 75\% and blocksizes outside 16-24. It is best above a share of 80\% and below a share of 25\% with a large range of block sizes---a block sizes of 8 is the only point where an optimal case does not occur.
 
 \subsection{Compressible Euler's Equations}
 \label{eulerVortexResults}
 
+The same tests and data that we performed in Section~\ref{hdeResults} were repeated here and the results are as follows. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across  the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface} and behave as expected. Differences in behavior are more apparent in this case compared to Figure~\ref{fig:heatSurface}. 
 
-\subsection{Hardware Comparison}
-\label{hardwareResults}
+\begin{figure}[htb!]
+    \centering
+    \includegraphics{figs/eulerValidate.pdf}
+    \caption{Euler equations contours over 500 time steps}
+    \label{fig:eulerSurface}
+\end{figure}
+
+The first hardware set results, Figure~\ref{fig:newSpeedupEuler}, shows that the \Swept{} solver is consistently slower than \Standard{} with an average speedup of 0.9491. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The majority of the best cases occur above approximately 90\% share but there is no clear blocksize trend. The majority of the worst cases occur at 100\% share but likewise a blocksize trend is unclear.
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[scale=0.7]{figs/speedUpeulerNew.pdf}
+    \caption{Swept rule speed up results with \newGPU{} GPUs and \newCPU{} CPUs.}
+    \label{fig:newSpeedupEuler}
+\end{figure}
+
+The second hardware set results, Figure~\ref{fig:oldSpeedupEuler}, shows that the \Swept{} solver is consistently slower than \Standard{} with an average speedup of 0.9383. Again, performance declines with increasing array size but there is benefit in some cases. The majority of the best cases occur below approximately 50\% share with a blocksize between 12-20. The majority of the worst cases occur at 100\% share with blocksizes of 8 and 32.
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[scale=0.7]{figs/speedUpeulerOld.pdf}
+    \caption{Swept rule speed up results with \oldGPU{} GPUs and \oldCPU{} CPUs.}
+    \label{fig:oldSpeedupEuler}
+\end{figure}
+
+Figure~\ref{fig:eulerHardwareComp} shows the comparison between the two hardware sets for the \Swept{} solver. On average, the first set of hardware is slower than the second with an average speedup of 0.9542. There are however regions in which performance benefits of the first set are evident. Shares above 90\% across most blocksizes and array sizes are evidence of this. Otherwise, the results are worse. 
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[scale=0.7]{figs/hardwareSpeedUpeuler.pdf}
+    \caption{Hardware speed up comparison for the Euler equations.}
+    \label{fig:eulerHardwareComp}
+\end{figure}
+
+\subsection{Weak-scalability}
+These results raised some questions about the performance, e.g., why the swept rule performs better in some cases but not others. We considered the weak-scalability of the algorithms to explore.
+\begin{figure}
+    \centering
+    \includegraphics{}
+    \caption{Caption}
+    \label{fig:my_label}
+\end{figure}
+
 
 \section{Discussion}
 \label{discussion-section}
