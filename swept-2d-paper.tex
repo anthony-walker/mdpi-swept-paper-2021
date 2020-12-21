@@ -118,7 +118,7 @@ This paper contain is a study of the swept rule in two dimensions on heterogeneo
 \linenumbers
 
 \section{Introduction}
-Partial differential equations (PDEs) are used to model many phenomena in science and engineering. Fluid mechanics and heat transfer are among these phenomena which can be notoriously difficult to solve on a pragmatic scale. Wildfire is a good example of this because it involves fluid mechanics, heat transfer, and chemistry over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such a phenomenon in real time would allow for better response to it but there are many challenges associated with making these predictions.
+Partial differential equations (PDEs) are used to model many phenomena in science and engineering. Fluid mechanics and heat transfer are among these phenomena which can be notoriously difficult to solve on a pragmatic scale. Wildfire is a good example of this because it involves fluid mechanics, heat transfer, and chemistry over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such a phenomenon in real time would allow for better response to it but, there are many challenges associated with making these predictions.
 
 Unsteady multidimensional PDEs often require the use of distributed memory systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. The solution of many problems at any point in the grid is inherently dependent on the neighboring points in each dimension. This dependence necessitates communication between computing nodes. Each of these communications incurs a minimum cost regardless of the amount of information communicated known as network latency. On the contrary, bandwidth is the variable cost associated with the amount of data transferred. This latency can be significantly restrictive on the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the latency barrier and is impactful in large scale simulations advancing many time steps, i.e., ones that requires a large amount of communication \cite{Alhubail2016ThePDEs}. The barrier is a bottle neck in the system which can limit the performance regardless of the architecture.
 
@@ -158,15 +158,16 @@ Hopefully, it is clear at this point that latency reduction is important in high
 \section{Methodology}
 \label{methods-section}
 \subsection{Implementation \ Objectives}
-\pysweep{} comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule. Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. \Swept{} and \Standard{} both use the same decomposition, process handling, and work allocation code so that a performance comparison between solvers is representative of swept rule performance. \Swept{} does have some additional calculations prior to solving which are necessary for the swept solution process. These additional calculations are penalties of this swept implementation. 
+\pysweep{} comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep which serves as a comparison to the swept rule. Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. \Swept{} and \Standard{} both use the same decomposition, process handling, and work allocation code so that a performance comparison between solvers is representative of swept rule performance. \Swept{} does have some additional calculations prior to solving which are necessary for the swept rule solution process. These additional calculations are penalties of this swept rule implementation. 
 
 \par
-\pysweep{} was implemented using python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. Consequently, the aforementioned implementation allowed us to meet the objectives of this study on the swept rule which included understanding:
+\pysweep{} was implemented using Python and CUDA; the parallelism relies primarily on mpi4py and pycuda \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. Consequently, the aforementioned implementation allowed us to meet the objectives of this study on the swept rule which included understanding:
 \begin{enumerate}
-    \item its' performance benefits on distributed heterogeneous computing systems.
-    \item its' performance benefits with simple and complex numerical problems on heterogeneous systems.
+    \item its' performance on distributed heterogeneous computing systems.
+    \item its' performance with simple and complex numerical problems on heterogeneous systems.
     \item the impact of different hardware on its' performance.
     \item the impact of input parameters on its' performance.
+    \item the potential merits of the 2d swept rule on distributed heterogeneous computing systems.
 \end{enumerate}
 
 \subsection{Parameters \& Testing}
@@ -316,12 +317,12 @@ The heat diffusion equation was solved numerically using Forward Euler in time a
 \label{heat-analyt}
     T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
 \end{equation}
-The numerical and analytical solutions are graphically compared in figure~\ref{fig:heatSurface} and behave as expected.
+The numerical and analytical solutions are graphically compared in figure~\ref{fig:heatSurface} and behave as expected. 
 
-\begin{figure}
+\begin{figure}[htb!]
     \centering
-    \includegraphics{}
-    \caption{Heat Diffusion}
+    \includegraphics{figs/heatValidate.pdf}
+    \caption{Heat equation contours over 2500 time steps}
     \label{fig:heatSurface}
 \end{figure}
 
@@ -352,7 +353,7 @@ In Figure~\ref{fig:oldSpeedup}, we see some differing trends than Figure~\ref{fi
 
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/hardwareSpeedupHeat.pdf}
+    \includegraphics[scale=0.7]{figs/hardwareSpeedupheat.pdf}
     \caption{Hardware speed up comparison for the heat diffusion equation.}
     \label{fig:heatHardwareComp}
 \end{figure}
