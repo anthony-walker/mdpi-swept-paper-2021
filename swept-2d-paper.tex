@@ -196,13 +196,16 @@ Array size is another parameter of interest because it demonstrates how performa
 
 \par
 The numerical scheme used to solve these equation(s) directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication.
-As such, the aforementioned parameters were applied to solving the unsteady compressible Euler equations and the unsteady heat diffusion equation as was done in other works regarding the swept rule \cite{Magee2018AcceleratingDecomposition,Alhubail2016ThePDEs,Alhubail2018ThePDEs, Magee2020ApplyingSystems}. The compressible Euler equations were applied to the isentropic Euler vortex and solved using a second order Runge-Kutta in time and a five point finite volume method in each spatial direction with a minmod flux limiter and Roe approximate Reimann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. The heat diffusion equation was applied to an analytical problem and solved using forward Euler method in time and a three point finite difference in each spatial direction. Further details on these methods and the associated problems is provided in Appendix \ref{AppendixA}.
+As such, the aforementioned parameters were applied to solving the unsteady compressible Euler equations and the unsteady heat diffusion equation as was done in other works regarding the swept rule \cite{Magee2018AcceleratingDecomposition,Alhubail2016ThePDEs,Alhubail2018ThePDEs, Magee2020ApplyingSystems}. The compressible Euler equations were applied to the isentropic Euler vortex and solved using a second order Runge-Kutta in time and a five point finite volume method in each spatial direction with a minmod flux limiter and Roe approximate Reimann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. The heat diffusion equation was applied to an analytical problem and solved using forward Euler method in time and a three point finite difference in each spatial direction. Further details on these methods and the associated problems is provided in~\ref{Heat-Diffusion} and~\ref{Compressible-Euler}.
 
 \par
 To summarize the performance parameters, array size, block size, share, and the hardware were all varied in this study. Array sizes of [160, 320, 480, 640, 800, 960, 1120] were used to make the total number of points span a few orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. Along with these parameters, we advanced each problem 500 time steps on two different sets of hardware.
 
 \par
-Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs and, the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in Appendix~\ref{AppendixB} or the sources \cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}. Each of these sets were used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}.
+Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs and, the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in \ref{Hardware} or the sources \cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}. Each of these sets were used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}. 
+
+\par 
+The results of this study raised some questions about the scalability of the algorithms used. So, weak scalability was considered with up to three nodes consistent with hardware set 2. Each node was given an array size of 960 and solved the Euler equations for 500 time steps.
 
 \subsection{Swept Solution Process}
 \label{swept-process-section}
@@ -304,20 +307,14 @@ In summary of this swept rule solution process, \pysweep{} is an extensible PDE 
 \par
 The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions but can be modified to suite other conditions using the same strategy. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. \pysweep{} could certainly be further optimized but it is presently sufficient to test and determine the performance capabilities of the two dimensional heterogeneous swept rule in comparison to a traditional solver.
 
-\section{Results}
+\section{Results \& Discussion}
 \label{results-section}
+
 
 \subsection{Heat Diffusion Equation}
 \label{hdeResults}
-The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space which gives the update formula shown in equation~\ref{heat-update}. We  validated the numerical solution against equation~\ref{heat-analyt}.
-\begin{equation}
-    \label{heat-update}
-    T_{i,j}^{k+1} = T_{i,j}^{k}+\frac{\alpha \Delta t}{\Delta x^2}\big(T_{i+1,j}^{k}-2T_{i,j}^{k}+T_{i-1,j}^{k}\big)+\frac{\alpha \Delta t}{\Delta y^2}\big(T_{i,j+1}^{k}-2T_{i,j}^{k}+T_{i,j-1}^{k}\big)
-\end{equation}
-\begin{equation}
-\label{heat-analyt}
-    T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
-\end{equation}
+The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space which we validated against an analytical solution developed for the 2D heat diffusion equation with periodic boundary conditions---the problem formulation is shown in Appendix~\ref{Heat-Diffusion}.
+
 The numerical and analytical solutions are graphically compared in Figure~\ref{fig:heatSurface} and behave as expected. Stability of the algorithm requires a very small time step so changes between the plots in Figure~\ref{fig:heatSurface} are subtle even over a large number of time steps.
 
 \begin{figure}[htb!]
@@ -363,6 +360,7 @@ In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistentl
 
 \subsection{Compressible Euler's Equations}
 \label{eulerVortexResults}
+The Euler equations were solved numerically using a second order Runge-Kutta in time and a five point central difference in space with a minmod flux limiter and Roe approximate Riemann solver which we  validated against the isentropic Euler Vortex \cite{SpiegelAMethods}.
 
 The same tests and data that we performed in Section~\ref{hdeResults} were repeated here and the results are as follows. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across  the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface} and behave as expected. Differences in behavior are more apparent in this case compared to Figure~\ref{fig:heatSurface}. 
 
@@ -401,7 +399,7 @@ Figure~\ref{fig:eulerHardwareComp} shows the comparison between the two hardware
 \end{figure}
 
 \subsection{Weak-scalability}
-These results raised some questions about the performance, e.g., why the swept rule performs better in some cases but not others. We considered the weak-scalability of the algorithms to explore. Figure~\ref{fig:scalability} shows that the \Standard{} solver has better weak scalability than \Swept{}. However, neither of them are great; ideally, the lines would be flat.
+These results raised some questions about the performance, e.g., why the swept rule performance decreases with increasing array size. We considered the weak-scalability of the algorithms to explore this. Figure~\ref{fig:scalability} shows that the \Standard{} solver has better weak scalability than \Swept{}. However, neither of them are great; ideally, the lines would be flat.
 \begin{figure}
     \centering
     \includegraphics[scale=0.7]{figs/weakScalability.pdf}
@@ -409,10 +407,11 @@ These results raised some questions about the performance, e.g., why the swept r
     \label{fig:scalability}
 \end{figure}
 
+In regards to the heat diffusion equation, we see an overall range of speed up from 0.2248-2.7128 for the first hardware set and 0.7882-1.3204 for the second. However the limits of speedup seem to be outliers. This pales in comparison to the one dimensional heterogeneous version which reported 1.9 to 23 times speed up and, the one dimensional GPU version which reported 2 to 9 times speed up for similar applications for the  \cite{Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}. 
 
-\section{Discussion}
-\label{discussion-section}
-In regards to the heat diffusion equation, we see an overall range of speed up from [0.225,1.602] independent of the hardware. The speed up of 0.225 seems to be an outlier in this case because the next lowest speed up 0.772. This pales in comparison to the one dimensional heterogeneous version which reported 1.9 to 23 times speed up and, the one dimensional GPU version which reported 2 to 9 times speed up for similar applications \cite{Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}. Regardless, there is evidence that shows that the swept rule can be both helpful and harmful. We do believe however that optimizations can be made to maximize the speed up and minimize slow down. 
+In regards to the Euler equations, we see an overall range of 0.5180-1.4648 for the first set of hardware and 0.3648-1.4215 for the second. This is more in line with the values reported in other studies. The two dimensional CPU version reported a speedup of at most 4, the one dimensional GPU version reported 0.5263-0.8333, and the one dimensional heterogeneous version reported 1.1-2.0 \cite{Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}.
+
+Regardless, there is evidence that shows that the swept rule can be both helpful and harmful. We do believe however that optimizations can be made to maximize the speed up and minimize slow down.  
 \par
 We believe that the trend among array sizes exists because of the method for managing the boundaries. In this method, data is shifted between shared memory arrays to align computations appropriately for the avoidance of complex boundary logic in developing the solution. However, once the array becomes large, this method's performance seems to deteriorate. To optimize this, we feel that changing each process's perspective would in lieu of shifting data would provide a much more scalable method. This however is untested due to project time constraints. 
 \par
@@ -439,21 +438,52 @@ Tesla K40c GPU used for this research.
 \bibliographystyle{unsrt}
 \bibliography{references}
 
-\section{Appendix}
-\label{appendices}
-\subsection{Numerical Problems}
-\subsubsection{Heat Diffusion Equation}
-\subsubsection{Euler Vortex}
 
-\label{AppendixA}
-\subsection{Hardware}
-\label{AppendixB}
+\appendix
+
+% Fix for missing space between "Appendix" and letter
+\renewcommand*{\thesection}{\appendixname~\Alph{section}}
+\section{Heat Diffusion Equation}
+\label{Heat-Diffusion}
+The heat diffusion problem is as follows:
+\begin{align*}
+    &\rho c_p \frac{\partial T}{\partial t} = k\frac{\partial^2 T}{\partial x^2}+k\frac{\partial^2 T}{\partial y^2},\quad 0<x<1,\quad 0<y<1,\quad t>0\\
+    &T(0,y,t) = T(1,y,t),\quad 0<x<1,\quad t>0\\
+    &T(x,0,t) = T(x,1,t),\quad 0<y<1,\quad t>0\\
+    &T(x,y,0) = sin(2\pi x)\,sin(2\pi y), \quad 0\leq x\leq 1,\quad 0 \leq y \leq 1
+\end{align*}
+with an analytical solution of
+\begin{equation*}
+\label{heat-analyt}
+    T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
+\end{equation*}
+and an update equation of 
+\begin{equation*}
+    \label{heat-update}
+    T_{i,j}^{k+1} = T_{i,j}^{k}+\frac{\alpha \Delta t}{\Delta x^2}\big(T_{i+1,j}^{k}-2T_{i,j}^{k}+T_{i-1,j}^{k}\big)+\frac{\alpha \Delta t}{\Delta y^2}\big(T_{i,j+1}^{k}-2T_{i,j}^{k}+T_{i,j-1}^{k}\big)
+\end{equation*}
+
+\section{Compressible Euler Vortex}
+\label{Compressible-Euler}
+The compressible Euler equations and the equation of state use are as follows where subscripts represent derivatives with respect to the spatial dimensions (x and y) or time (t).
+\begin{align*}
+    &\rho_t  = (\rho u)_x + (\rho v)_y \\ 
+    &(\rho u)_t  = (\rho u+P)_x + (\rho u v)_y\\
+    &(\rho v)_t  = (\rho v+P)_y + (\rho u v)_x\\
+    &E_t = ((E+P)u)_x+((E+P)v)_y\\
+    &E = \frac{P}{\gamma -1}+\frac{1}{2}\rho(u^2+v^2)
+\end{align*}
+
+
+
+\section{Hardware}
+\label{Hardware}
 \begin{table}[htb!]
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 
  \hline
- Hardware Specifications & Set 1 & Set 2 \\ 
+ Hardware Specifications & Set 1 & Set 2 \\
  \hline
  GPU & \newGPU{} & \oldGPU{} \\
  Architecture   & Volta &  Pascal \\
@@ -471,4 +501,6 @@ Tesla K40c GPU used for this research.
 \end{center}
 \caption{\label{hardwareTable} Common specifications found between hardware sets from NVIDIA's and Intel's websites \cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}.}
 \end{table}
+
+
 \end{document}
