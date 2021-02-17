@@ -306,7 +306,7 @@ The solver has a few restrictions based on architecture and implementation which
 
 \subsection{Heat Diffusion Equation}
 \label{hdeResults}
-The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space. We validated it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation is shown in Appendix~\ref{Heat-Diffusion}. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:heatSurface} and behave as expected. Stability of the algorithm requires a very small time step so changes between the plots in Figure~\ref{fig:heatSurface} are subtle even over a large number of time steps.
+The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space. We validated it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation is shown in Appendix~\ref{Heat-Diffusion}. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:heatSurface} and behave as expected.
 
 \begin{figure}[htb!]
     \centering
@@ -353,7 +353,7 @@ In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistentl
 \label{eulerVortexResults}
 The Euler equations were solved numerically using a second order Runge-Kutta in time and a five point central difference in space with a minmod flux limiter and Roe approximate Riemann solver which we validated against the isentropic Euler Vortex \cite{SpiegelAMethods}.
 
-The same tests that we performed in Section~\ref{hdeResults} were repeated here. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface} and behave as expected. Differences in behavior are more apparent in this case compared to Figure~\ref{fig:heatSurface}. 
+The same tests that we performed in Section~\ref{hdeResults} were repeated here. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface}. The differences in this case are less apparent than in Figure~\ref{fig:heatSurface} but, they behave as expected. 
 
 \begin{figure}[htb!]
     \centering
