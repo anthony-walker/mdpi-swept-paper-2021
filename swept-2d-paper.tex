@@ -431,14 +431,12 @@ Overall, we were able to gain insight to the performance benefits of the swept r
 
 Next, we wanted to consider the impact of different hardware and determined that there are some substantial differences. The first set of hardware, which is newer technology, produced more speedup between the \Swept{} and \Standard{} solvers but performed worse when compared to the same solver with the other hardware set. We suspect this is because the first hardware set has nearly double the bandwidth capabilities of the second set which makes the bandwidth expense less dominant in swept communications. Better performance when comparing \Swept{} and \Standard{} for the first hardware set also supports the conclusion in section~\ref{results-section} that bandwidth is one of the dominating expenses in the current implementation.
 
-Finally, we wanted to consider the impact of the swept performance on parameters of interest, e.g., share, block size, and array size. We saw that \texttt{Pysweep's} performance decreases as array size increases. This decrease in performance is a result of the implementation which can be corrected to mitigate this. The share does impact the simulation and can be configured to obtain optimal performance but in general it is faster to use the GPU entirely. 
+Finally, we wanted to consider the impact of the swept performance on parameters of interest, e.g., share, block size, and array size. We considered the mode of the optimal and worst cases to further draw conclusions here. \texttt{Pysweep's} performance decreases as array size increases. This decrease in performance is a result of the implementation which can be somewhat corrected to mitigate this. The share does have an impact on shortest simulation time but does not impact the optimal configuration as much. In fact, the number of occurrences of best and worst cases were very similar for each value of share. We believe the number of occurrences are similar and share does not greatly impact the optimal configuration because of the shared memory paradigm which mitigates cost of intra-node communication. 
+Configuration aside, it was always fastest to use a share of 1.
 
-The block size greatly impacted the performance of the swept rule with the mode of optimal and worst block sizes being 12 and 8 respectively; the mean values were
+The block size greatly impacted the performance of the swept rule. We determined that the optimal cases occur most in a range of 12-24. The worst cases are an inverse of this where the greatest number of occurrences are on the boundary block sizes 8 and 32. It was expected that the largest block size would have the greatest performance and the smallest would have the worst because it limits the swept steps. However, this was not exactly the case. We believe this is a result of balancing thread occupancy and latency improvements. Smaller blocks have more communications and larger blocks have greater thread vacancy towards the end of a simulation phase. So, it makes sense that the best cases are balancing the latency savings while not completely sacrificing thread occupancy. 
 
-and the mode of worst block sizes being  
-It was expected that the largest block size would have the greatest performance and the smallest would have the worst because it limits the swept steps. However, this was not the case.  
-
-We can conclude from this study that the swept rule is highly implementation dependent and it does have potential for benefit, albeit this is limited for complicated numerical schemes. As a rough heuristic, we would suggest starting with a block size of 24, a share above 80\%, and tuning to optimal performance from there. However, there are multiple cases in which the optimal performance is far from these parameters. Unfortunately, a sweep of the parameters is the best way to determine the best configuration. Finally, we believe that to optimize \pysweep{} we would need to further explore strategies for the communication step and utilize a compiled language for the core of the code to better realize the effects of the swept rule. However, this version was a good start and provided insight into the potential of the method. 
+We can conclude from this study that the swept rule is highly implementation dependent and it does have potential for benefit, albeit this is limited for complicated numerical schemes. As a rough heuristic, we would suggest starting with a block size of 16, a share above 80\%, and tuning to optimal performance from there. However, there are multiple cases in which the optimal performance is far from these parameters. Unfortunately, a sweep of the parameters is the best way to determine the best configuration. Finally, we believe that to optimize \pysweep{} we would need to further explore strategies for the communication step and utilize a compiled language for the core of the code to better realize the effects of the swept rule. However, this version was a good start and provided insight into the potential of the method. 
 
 \section{Acknowledgements}
 This material is based upon work supported by NASA under award No. NNX15AU66A under the technical monitoring of Drs. Eric Nielsen and Mujeeb Malik. We also gratefully acknowledge the support of NVIDIA Corporation, who donated a
@@ -480,7 +478,9 @@ The compressible Euler equations and the equation of state use are as follows wh
     &E_t = ((E+P)u)_x+((E+P)v)_y\\
     &E = \frac{P}{\gamma -1}+\frac{1}{2}\rho(u^2+v^2)
 \end{align*}
-Similar to the heat diffusion equation, periodic boundary conditions were implemented. However, the numerical scheme is much more complicated.
+Similar to the heat diffusion equation, periodic boundary conditions were implemented but only one boundary condition is required in each direction because the order of the derivative. However, the numerical scheme is much more complicated.
+
+
 
 
 
