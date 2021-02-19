@@ -59,6 +59,27 @@
 
 %=================================================================
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, changepage, paracol, attrib, upgreek, cleveref, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
+%My Packages
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{subfig}
+\usepackage[section]{placeins}
+%----------------MACROS--------------------
+\def\github{\url{https://github.com/anthony-walker/pysweep-git}}
+\def\pysweep{\texttt{PySweep}}
+\def\Swept{\texttt{Swept}}
+\def\Standard{\texttt{Standard}}
+\def\Up{\texttt{Up-Pyramid}}
+\def\Down{\texttt{Down-Pyramid}}
+\def\Oct{\texttt{Octahedron}}
+\def\Xb{\texttt{X-Bridge}}
+\def\Yb{\texttt{Y-Bridge}}
+
+\def\oldCPU{Intel Skylake Silver 4114} %20 core cpu
+\def\oldGPU{Nvidia GeForce GTX 1080 Ti}
+
+\def\newCPU{Intel E5-2698v4} %20 core cpu
+\def\newGPU{Tesla V100-DGXS-32GB}
 
 %=================================================================
 %% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
@@ -140,15 +161,16 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\setcounter{section}{-1} %% Remove this when starting to work on the template.
-\section{How to Use this Template}
-
-The template details the sections that can be used in a manuscript. Note that the order and names of article sections may differ from the requirements of the journal (e.g., the positioning of the Materials and Methods section). Please check the instructions on the authors' page of the journal to verify the correct order and names. For any questions, please contact the editorial office of the journal or support@mdpi.com. For LaTeX-related questions please contact latex@mdpi.com.
-%The order of the section titles is: Introduction, Materials and Methods, Results, Discussion, Conclusions for these journals: aerospace,algorithms,antibodies,antioxidants,atmosphere,axioms,biomedicines,carbon,crystals,designs,diagnostics,environments,fermentation,fluids,forests,fractalfract,informatics,information,inventions,jfmk,jrfm,lubricants,neonatalscreening,neuroglia,particles,pharmaceutics,polymers,processes,technologies,viruses,vision
-
 \section{Introduction}
+Partial differential equations (PDEs) are used to model many phenomena in science and engineering. Fluid mechanics and heat transfer are among these phenomena which can be notoriously difficult to solve on a pragmatic scale. Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemistry over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such a phenomenon in real time would allow for better response to it, but, there are many challenges associated with making these predictions.
 
-The introduction should briefly place the study in a broad context and highlight why it is important. It should define the purpose of the work and its significance. The current state of the research field should be reviewed carefully and key publications cited. Please highlight controversial and diverging hypotheses when necessary. Finally, briefly mention the main aim of the work and highlight the principal conclusions. As far as possible, please keep the introduction comprehensible to scientists outside your particular field of research. Citing a journal paper \cite{ref-journal}. Now citing a book reference \cite{ref-book1,ref-book2} or other reference types \cite{ref-unpublish,ref-communication,ref-proceeding}. Please use the command \citep{ref-thesis,ref-url} for the following MDPI journals, which use author--date citation: Administrative Sciences, Arts, Econometrics, Economies, Genealogy, Histories, Humanities, IJFS, Journal of Intelligence, Journalism and Media, JRFM, Languages, Laws, Religions, Risks, Social Sciences.
+Unsteady multi-dimensional PDEs often require the use of distributed memory systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. The solution of many problems at any point in the grid is inherently dependent on the neighboring points in each dimension. This dependence necessitates communication between computing nodes. Each of these communications incurs a minimum cost regardless of the amount of information communicated known as network latency. On the contrary, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can be significantly restrictive on the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the latency barrier and is impactful in large scale simulations advancing many time steps, i.e., ones that require a large amount of communication \cite{Alhubail2016ThePDEs}. The barrier is a bottle neck in the system which can limit the performance regardless of the architecture.
+
+\par
+Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or a system with multiple processor types---a system with CPUs and GPUs in this case. Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs \cite{OanceaGPGPUCOMPUTING}. Minimizing latency in high performance computing (HPC) is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{Alexandrov2016RouteSkills}.
+
+\par
+\pysweep{}\footnote{\github} is our implementation of a two-dimensional heterogeneous solver for unsteady partial differential equations that employs a technique to help overcome the latency barrier---the swept rule \cite{Alhubail2016ThePDEs}. In other words, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). In this article, we first discuss related work, the distinctions between our work, and more motivation in section~\ref{related-section}. Next, we describe some implementation details, objectives, study parameters, design decisions, methods, and tests in section~\ref{methods-section}. As expected, this is followed with results and conclusions in sections~\ref{results-section} and~\ref{conclusions-section}. Finally, the paper closes with acknowledgements, references, and appendices.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Materials and Methods}
@@ -262,7 +284,7 @@ The text continues here.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
-Authors should discuss the results and how they can be interpreted from the perspective of previous studies and of the working hypotheses. The findings and their implications should be discussed in the broadest context possible. Future research directions may also be highlighted.
+Authors should discuss the results and how they can be interpreted from the perspective of previous studies and of the working hypotheses. The findings and their implications should be discussed in the broadest context possible. Future research directions may also be highlighted \cite{Magee2018}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
@@ -302,12 +324,6 @@ Written informed consent for publication must be obtained from participating pat
 
 \conflictsofinterest{Declare conflicts of interest or state ``The authors declare no conflict of interest.'' Authors must identify and declare any personal circumstances or interest that may be perceived as inappropriately influencing the representation or interpretation of reported research results. Any role of the funders in the design of the study; in the collection, analyses or interpretation of data; in the writing of the manuscript, or in the decision to publish the results must be declared in this section. If there is no role, please state ``The funders had no role in the design of the study; in the collection, analyses, or interpretation of data; in the writing of the manuscript, or in the decision to publish the~results''.} 
 
-%% Optional
-\sampleavailability{Samples of the compounds ... are available from the authors.}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Only for journal Encyclopedia
-%\entrylink{The Link to this entry published on the encyclopedia platform.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Optional
@@ -315,41 +331,81 @@ Written informed consent for publication must be obtained from participating pat
 
 \noindent 
 \begin{tabular}{@{}ll}
-MDPI & Multidisciplinary Digital Publishing Institute\\
-DOAJ & Directory of open access journals\\
-TLA & Three letter acronym\\
-LD & Linear dichroism
+GPU & Graphics Processing Unit\\
+CPU & Central Processing Unit\\
+HPC & High Performance Computing\\
+HDE & Heat Diffusion Equation\\
 \end{tabular}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Optional
-\appendixtitles{no} % Leave argument "no" if all appendix headings stay EMPTY (then no dot is printed after "Appendix A"). If the appendix sections contain a heading then change the argument to "yes".
+\appendixtitles{yes} % Leave argument "no" if all appendix headings stay EMPTY (then no dot is printed after "Appendix A"). If the appendix sections contain a heading then change the argument to "yes".
 \appendixstart
 \appendix
-\section{}
-\subsection{}
-The appendix is an optional section that can contain details and data supplemental to the main text---for example, explanations of experimental details that would disrupt the flow of the main text but nonetheless remain crucial to understanding and reproducing the research shown; figures of replicates for experiments of which representative data are shown in the main text can be added here if brief, or as Supplementary Data. Mathematical proofs of results not central to the paper can be added as an appendix.
+\section{Heat Diffusion Equation}
+\label{Heat-Diffusion}
+The heat diffusion problem is as follows:
+\begin{align*}
+    &\rho c_p \frac{\partial T}{\partial t} = k\frac{\partial^2 T}{\partial x^2}+k\frac{\partial^2 T}{\partial y^2},\quad 0<x<1,\quad 0<y<1,\quad t>0\\
+    &T(0,y,t) = T(1,y,t),\quad 0<x<1,\quad t>0\\
+    &T(x,0,t) = T(x,1,t),\quad 0<y<1,\quad t>0\\
+    &T(x,y,0) = sin(2\pi x)\,sin(2\pi y), \quad 0\leq x\leq 1,\quad 0 \leq y \leq 1
+\end{align*}
+with an analytical solution of
+\begin{equation*}
+\label{heat-analyt}
+    T(x,y,t) = sin(2\pi x)\,sin(2\pi y)\,e^{-8\pi^2\alpha t}
+\end{equation*}
+and an update equation of 
+\begin{equation*}
+    \label{heat-update}
+    T_{i,j}^{k+1} = T_{i,j}^{k}+\frac{\alpha \Delta t}{\Delta x^2}\big(T_{i+1,j}^{k}-2T_{i,j}^{k}+T_{i-1,j}^{k}\big)+\frac{\alpha \Delta t}{\Delta y^2}\big(T_{i,j+1}^{k}-2T_{i,j}^{k}+T_{i,j-1}^{k}\big)
+\end{equation*}
 
-\begin{specialtable}[H] 
-%\tablesize{\scriptsize}
-\caption{This is a table caption. Tables should be placed in the main text near to the first time they are~cited.\label{tab1}}
-%\tablesize{} % You can specify the fontsize here, e.g., \tablesize{\footnotesize}. If commented out \small will be used.
-\begin{tabular}{ccc}
-\toprule
-\textbf{Title 1}	& \textbf{Title 2}	& \textbf{Title 3}\\
-\midrule
-Entry 1		& Data			& Data\\
-Entry 2		& Data			& Data\\
-\bottomrule
+\section{Compressible Euler Vortex}
+\label{Compressible-Euler}
+The compressible Euler equations and the equation of state use are as follows where subscripts represent derivatives with respect to the spatial dimensions (x and y) or time (t).
+\begin{align*}
+    &\rho_t  = (\rho u)_x + (\rho v)_y \\ 
+    &(\rho u)_t  = (\rho u+P)_x + (\rho u v)_y\\
+    &(\rho v)_t  = (\rho v+P)_y + (\rho u v)_x\\
+    &E_t = ((E+P)u)_x+((E+P)v)_y\\
+    &E = \frac{P}{\gamma -1}+\frac{1}{2}\rho(u^2+v^2)
+\end{align*}
+Similar to the heat diffusion equation, periodic boundary conditions were implemented but only one boundary condition is required in each direction because the order of the derivative. However, the numerical scheme is much more complicated.
+
+
+\section{Hardware}
+\label{Hardware}
+\begin{table}[htb!]
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+
+ \hline
+ Hardware Specifications & Set 1 & Set 2 \\
+ \hline
+ GPU & \newGPU{} & \oldGPU{} \\
+ Architecture   & Volta &  Pascal \\
+ NVIDIA CUDA® Cores  & 5120 &  3584 \\
+ Memory Type   & 32 GB HBM2 &  11 GB GDDR5X \\
+ Bus Width    & 4096 bit &  352-bit \\
+ Memory Bandwidth (GB/sec)  & 900 &  484 \\ 
+ \hline
+ CPU & \newCPU{} & \oldCPU{} \\ 
+ Cores & 20 & 10 \\
+ Processor Base Frequency & 2.20 GHz & 2.20 GHz \\
+ Cache & 50 MB Intel® Smart Cache & 13.75 MB L3 Cache\\
+ \hline
 \end{tabular}
-\end{specialtable}
+\end{center}
+\caption{\label{hardwareTable} Common specifications found between hardware sets from NVIDIA's and Intel's websites \cite{Gander2014} } %\cite{Intel123550,Intel91753,NVIDIANVIDIA,GeForceGeForce}
+\end{table} 
 
-\section{}
-All appendix sections must be cited in the main text. In the appendices, Figures, Tables, etc. should be labeled, starting with ``A''---e.g., Figure A1, Figure A2, etc. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{paracol}
-\reftitle{References}
+
 
 % Please provide either the correct journal abbreviation (e.g. according to the “List of Title Word Abbreviations” http://www.issn.org/services/online-services/access-to-the-ltwa/) or the full name of the journal.
 % Citations and References in Supplementary files are permitted provided that they also appear in the reference list here. 
@@ -357,38 +413,9 @@ All appendix sections must be cited in the main text. In the appendices, Figures
 %=====================================
 % References, variant A: external bibliography
 %=====================================
-%\externalbibliography{yes}
-%\bibliography{your_external_BibTeX_file}
+\externalbibliography{yes}
+\bibliography{references.bib}
 
-%=====================================
-% References, variant B: internal bibliography
-%=====================================
-\begin{thebibliography}{999}
-% Reference 1
-\bibitem[Author1(year)]{ref-journal}
-Author~1, T. The title of the cited article. {\em Journal Abbreviation} {\bf 2008}, {\em 10}, 142--149.
-% Reference 2
-\bibitem[Author2(year)]{ref-book1}
-Author~2, L. The title of the cited contribution. In {\em The Book Title}; Editor1, F., Editor2, A., Eds.; Publishing House: City, Country, 2007; pp. 32--58.
-% Reference 3
-\bibitem[Author3(year)]{ref-book2}
-Author 1, A.; Author 2, B. \textit{Book Title}, 3rd ed.; Publisher: Publisher Location, Country, 2008; pp. 154--196.
-% Reference 4
-\bibitem[Author4(year)]{ref-unpublish}
-Author 1, A.B.; Author 2, C. Title of Unpublished Work. \textit{Abbreviated Journal Name} stage of publication (under review; accepted; in~press).
-% Reference 5
-\bibitem[Author5(year)]{ref-communication}
-Author 1, A.B. (University, City, State, Country); Author 2, C. (Institute, City, State, Country). Personal communication, 2012.
-% Reference 6
-\bibitem[Author6(year)]{ref-proceeding}
-Author 1, A.B.; Author 2, C.D.; Author 3, E.F. Title of Presentation. In Title of the Collected Work (if available), Proceedings of the Name of the Conference, Location of Conference, Country, Date of Conference; Editor 1, Editor 2, Eds. (if available); Publisher: City, Country, Year (if available); Abstract Number (optional), Pagination (optional).
-% Reference 7
-\bibitem[Author7(year)]{ref-thesis}
-Author 1, A.B. Title of Thesis. Level of Thesis, Degree-Granting University, Location of University, Date of Completion.
-% Reference 8
-\bibitem[Author8(year)]{ref-url}
-Title of Site. Available online: URL (accessed on Day Month Year).
-\end{thebibliography}
 
 % If authors have biography, please use the format below
 %\section*{Short Biography of Authors}
