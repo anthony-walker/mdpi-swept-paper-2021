@@ -147,7 +147,7 @@
    title = {50 Years of Time Parallel Time Integration},
    url = {https://link.springer.com/chapter/10.1007/978-3-319-23321-5_3},
 }
-@report{,
+@report{SolomonikEigenSolver,
    abstract = {Many large-scale scientific computations require eigenvalue solvers in a scaling regime where efficiency is limited by data movement. We introduce a parallel algorithm for computing the eigenvalues of a dense symmetric matrix, which performs asymptotically less communication than previously known approaches. We provide analysis in the Bulk Synchronous Parallel (BSP) model with additional consideration for communication between a local memory and cache. Given sufficient memory to store c copies of the symmetric matrix, our algorithm requires Θ(√ c) less interprocessor communication than previously known algorithms, for any c ≤ p 1/3 when using p processors. The algorithm first reduces the dense symmetric matrix to a banded matrix with the same eigenvalues. Subsequently, the algorithm employs successive reduction to O(log p) thinner banded matrices. We employ two new parallel algorithms that achieve lower communication costs for the full-to-band and band-to-band reductions. Both of these algorithms leverage a novel QR factorization algorithm for rectangular matrices.},
    author = {Edgar Solomonik and Eth Zurich and Grey Ballard and James Demmel},
    journal = {dl.acm.org},
@@ -174,7 +174,7 @@
    volume = {32},
    year = {2011},
 }
-@book{,
+@book{DemmelAvoidingComputations,
    abstract = {The performance of sparse iterative solvers is typically limited by sparse matrix-vector multiplication, which is itself limited by memory system and network performance. As the gap between computation and communication speed continues to widen, these traditional sparse methods will suffer. In this paper we focus on an alternative building block for sparse iterative solvers, the "matrix powers ker-nel" [x, Ax, A 2 x,. .. , A k x], and show that by organizing computations around this kernel, we can achieve near-minimal communication costs. We consider communication very broadly as both network communication in parallel code and memory hierarchy access in sequential code. In particular, we introduce a parallel algorithm for which the number of messages (total latency cost) is independent of the power k, and a sequential algorithm, that reduces both the number and volume of accesses, so that it is independent of k in both latency and bandwidth costs. This is part of a larger project to develop "communication-avoiding Krylov subspace methods," which also addresses the numerical issues associated with these methods. Our algorithms work for general sparse matrices that "partition well". We introduce parallel performance models of matrices arising from 2D and 3D problems and show predicted speedups over a conventional algorithm of up to 7x on a Petaflop-scale machine and up to 22x on computation across the Grid. Analogous sequential performance models of the same problems predict speedups over a conventional algorithm of up to 10x on an out-of-core implementation , and up to 2.5x when we use our ideas to reduce off-chip latency and bandwidth to DRAM. Finally, we validate the model on an out-of-core sequential implementation and measured a speedup of over 3x, which is close to the predicted speedup.},
    author = {James Demmel and Mark Hoemmen and Marghoob Mohiyuddin and Katherine Yelick},
    isbn = {9781424416943},
@@ -182,7 +182,7 @@
    title = {Avoiding Communication in Sparse Matrix Computations},
    url = {https://ieeexplore.ieee.org/abstract/document/4536305/},
 }
-@article{,
+@article{Baboulin2012,
    author = {M Baboulin and S Donfack and J Dongarra and L Grigori - Procedia Computer … and undefined 2012},
    journal = {Elsevier},
    title = {A class of communication-avoiding algorithms for solving general dense linear systems on CPU/GPU parallel machines},
@@ -840,7 +840,7 @@
    title = {MAGMA},
    url = {https://icl.cs.utk.edu/magma/},
 }
-@report{,
+@report{OanceaDate,
    abstract = {Since the first idea of using GPU to general purpose computing, things have evolved over the years and now there are several approaches to GPU programming. GPU computing practically began with the introduction of CUDA (Compute Unified Device Architecture) by NVIDIA and Stream by AMD. These are APIs designed by the GPU vendors to be used together with the hardware that they provide. A new emerging standard, OpenCL (Open Computing Language) tries to unify different GPU general computing API implementations and provides a framework for writing programs executed across heterogeneous platforms consisting of both CPUs and GPUs. OpenCL provides parallel computing using task-based and data-based parallelism. In this paper we will focus on the CUDA parallel computing architecture and programming model introduced by NVIDIA. We will present the benefits of the CUDA programming model. We will also compare the two main approaches, CUDA and AMD APP (STREAM) and the new framwork, OpenCL that tries to unify the GPGPU computing models. Introduction Parallel computing offer a great advantage in terms of performance for very large applications in different areas like engineering, physics, biology, chemistry, computer vision, econometrics. Since the first supercomputers in early '70s, the nature of parallel computing has changed and new opportunities and challenges have appeared over the time. While 30-35 years ago computer scientists used massively parallel processors like the Goodyear MPP 1 Connection Machine 2 , Ultracomputer 3 and machines using Transputers 4 or dedicated parallel vector computers, like Cray computer series, nowadays off-the-shelves desktops have FLOP rates greater than a supercomputer in late 80's. For example, if Cray 1 had a peak performance of 80 Megaflops and CRAY X MP had a peak performance of 200 MFLOPS an actual multicore Intel processor has more than 120 GFLOPS. These figures emphasize a major shift in computer and processors design. The processors speed increased as the clock frequency and the number of transistors increased over the time. The clock frequency has increased by almost four orders of magnitudes between the first 8088 Intel processor and the actual processors, and the number of transistors also raised from 29.000 for Intel 8086 to approximately 730 million for an Intel Core i7-920 processor 5. The increased clock frequency has an important side effect-the heat dissipated by processors. To overcome this problem, instead of increasing the clock frequency the processor designers come with a new},
    author = {Bogdan Oancea and Tudorel Andrei and Raluca Mariana Dragoescu},
    keywords = {CUDA,GPU computing,OpenCL,Stream,parallel computing},
@@ -926,7 +926,7 @@
    volume = {95},
    year = {2013},
 }
-@report{,
+@report{SpiegelAMethods,
    abstract = {The flux reconstruction (FR) method offers a simple, efficient, and easy to implement method, and it has been shown to equate to a differential approach to discontinuous Galerkin (DG) methods. The FR method is also accurate to an arbitrary order and the isentropic Euler vortex problem is used here to empirically verify this claim. This problem is widely used in computational fluid dynamics (CFD) to verify the accuracy of a given numerical method due to its simplicity and known exact solution at any given time. While verifying our FR solver, multiple obstacles emerged that prevented us from achieving the expected order of accuracy over short and long amounts of simulation time. It was found that these complications stemmed from a few overlooked details in the original problem definition combined with the FR and DG methods achieving high-accuracy with minimal dissipation. This paper is intended to consolidate the many versions of the vortex problem found in literature and to highlight some of the consequences if these overlooked details remain neglected.},
    author = {Seth C Spiegel and H T Huynh and James R Debonis},
    keywords = {CPR,DG,FR,high-order methods},
