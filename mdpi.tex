@@ -59,24 +59,6 @@
 
 %=================================================================
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, changepage, paracol, attrib, upgreek, cleveref, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
-\usepackage{subfig}
-\usepackage[section]{placeins}
-%----------------MACROS--------------------
-\def\github{\url{https://github.com/anthony-walker/pysweep-git}}
-\def\pysweep{\texttt{PySweep}}
-\def\Swept{\texttt{Swept}}
-\def\Standard{\texttt{Standard}}
-\def\Up{\texttt{Up-Pyramid}}
-\def\Down{\texttt{Down-Pyramid}}
-\def\Oct{\texttt{Octahedron}}
-\def\Xb{\texttt{X-Bridge}}
-\def\Yb{\texttt{Y-Bridge}}
-
-\def\oldCPU{Intel Skylake Silver 4114} %20 core cpu
-\def\oldGPU{Nvidia GeForce GTX 1080 Ti}
-
-\def\newCPU{Intel E5-2698v4} %20 core cpu
-\def\newGPU{Tesla V100-DGXS-32GB}
 
 %=================================================================
 %% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
@@ -158,188 +140,84 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{section}{-1} %% Remove this when starting to work on the template.
+\section{How to Use this Template}
+
+The template details the sections that can be used in a manuscript. Note that the order and names of article sections may differ from the requirements of the journal (e.g., the positioning of the Materials and Methods section). Please check the instructions on the authors' page of the journal to verify the correct order and names. For any questions, please contact the editorial office of the journal or support@mdpi.com. For LaTeX-related questions please contact latex@mdpi.com.
+%The order of the section titles is: Introduction, Materials and Methods, Results, Discussion, Conclusions for these journals: aerospace,algorithms,antibodies,antioxidants,atmosphere,axioms,biomedicines,carbon,crystals,designs,diagnostics,environments,fermentation,fluids,forests,fractalfract,informatics,information,inventions,jfmk,jrfm,lubricants,neonatalscreening,neuroglia,particles,pharmaceutics,polymers,processes,technologies,viruses,vision
 
 \section{Introduction}
-\subsection{Background}
-Partial differential equations (PDEs) are used to model many phenomena in science and engineering. Fluid mechanics and heat transfer are among these phenomena which can be notoriously difficult to solve on a pragmatic scale. Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemistry over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such a phenomenon in real time would allow for better response to it, but, there are many challenges associated with making these predictions.
 
-Unsteady multi-dimensional PDEs often require the use of distributed memory systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. The solution of many problems at any point in the grid is inherently dependent on the neighboring points in each dimension. This dependence necessitates communication between computing nodes. Each of these communications incurs a minimum cost regardless of the amount of information communicated known as network latency. On the contrary, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can be significantly restrictive on the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the latency barrier and is impactful in large scale simulations advancing many time steps, i.e., ones that require a large amount of communication \cite{Alhubail2016}. The barrier is a bottle neck in the system which can limit the performance regardless of the architecture.
-
-\par
-Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or a system with multiple processor types---a system with CPUs and GPUs in this case. Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs \cite{OanceaDate}. Minimizing latency in high performance computing (HPC) is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{Alexandrov2016}.
-
-\par
-\pysweep{}\footnote{\github} is our implementation of a two-dimensional heterogeneous solver for unsteady partial differential equations that employs a technique to help overcome the latency barrier---the swept rule \cite{Alhubail2016}. In other words, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). In this article, we first discuss related work, the distinctions between our work, and more motivation in section~\ref{related-section}. Next, we describe some implementation details, objectives, study parameters, design decisions, methods, and tests in section~\ref{methods-section}. As expected, this is followed with results and conclusions in sections~\ref{results-section} and~\ref{conclusions-section}. Finally, the paper closes with acknowledgements, references, and appendices.
-
-\subsection{Related Work}
-\label{related-section}
-\par The latency barrier has been approached in many ways; the most closely related to this study being other swept rule studies which involve multiple dimensions and architectures but not the combination of the two \cite{Alhubail2016,Alhubail2018,Magee2018,Magee2020}. Parallel-in-time methods are also related to the swept rule but differ in the sense that they are iteratively attempting to parallelize the temporal direction and the swept rule is minimizing communication \cite{_sectionGander2015}. There are many examples of parallel-in-time methods which are all variations of the core concept of parallel-in-time methods \cite{Falgout2014,Lions2013,Maday2020,Wu2018,EmmettTowardEquations,MinionINTERWEAVINGMULTIGRID,Hahne2020}. For example, Parareal is one of the more popular parallel-in-time methods; it works by iterating over a series of coarse and fine grids with initial guesses to parallelize the problem \cite{Lions2013}. However, there are some stability concerns with Parareal that are addressed by local time integrators \cite{Wu2018}. These methods have the same goal but achieve that goal differently. Similarly, cache optimization techniques have the same objective but, they achieve it differently by optimizing communication not avoiding it \cite{_sectionKowarschik2003}.
-
-\par
- Finally, communication avoidance (CA) techniques are perhaps the most similar to the swept rule but the swept rule does not directly involve overlapping parts or redundant operations. The GPU implementation particularly blurs this difference because it solves an extra block to avoid intra-node communication but no extra blocks are solved for inter-node communication. The swept rule also differs because it is particularly focused on the solution of PDEs. There are varying degrees of CA algorithms which tend to focus on linear algebra \cite{DemmelAvoidingComputations, Ballard2011,Baboulin2012,Khabou2012,SolomonikEigenSolver}. 
-
-\par
-The swept rule was originally developed by Alhubail et al. who published a one-dimensional CPU only swept PDE solver which was tested by solving the Kuramoto-Sivashinsky equation and the compressible Euler equations. They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis showed that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016}. Alhubail et al. followed this work with a two-dimensional CPU only swept PDE solver which reported speedups of up to 3 times compared to classical methods when solving the Wave and Euler equations \cite{Alhubail2018}. These studies differ from our study and \pysweep{} most prominently by the dimensionality and intended architecture.
-
-\par
-Magee et al. created a one-dimensional GPU solver and a one-dimensional heterogeneous solver that were both applied to the compressible Euler equations \cite{Magee2018,Magee2020}. It was concluded that their shared memory approach typically performed better than alternative approaches but speedup was not obtained in all cases for either study. Varying performance results were attributed to greater usage of lower level memory which limits performance benefits of the swept rule depending on the problem \cite{Magee2018}. This study is an extension of the swept rule on heterogeneous architecture, it differs in the dimensionality. The implementation of \pysweep{} also attempts to use and extend some of the implementation strategies that showed promise in the aforementioned studies.
-
-\par
-The effect of added dimensionality on performance is a pragmatic interest and can be considered from multiple perspectives. The primary goal is speedup of simulations requiring HPC through the reduction of network latency. The swept rule is motivated by reducing the time to obtain solutions of problems involving complicated phenomena frequently requiring the use of HPC systems. While many simplifications exist to reduce the dimensionality of fluid dynamics problems, the most realistic modeling approach is three-dimensional. While this solver is not three-dimensional, it is a step in that direction which can provide insight to the performance of the swept rule in multiple dimensions. In the case of this specific solver, it can provide insight to the performance of the heterogeneous solver in two dimensions. This insight can offer the chance to optimize system usage and promote faster design and prototype of thermal fluid systems.
-
-\par
-In the event that computation time is not the primary concern, available resources or resource costs are other important considerations. The ability to execute a simulation on a HPC system is dependent on access to such systems. In the case of Amazon EC2, simulation time can be purchased at different hourly rates depending on the application\cite{AmazonEC2}. This can quickly become expensive for applications that require large numbers of computing hours. Network latency is aggrandized in applications requiring a lot of communication because each communication takes a finite amount of time regardless of the data size. It is also possible to obtain and show performance benefits on smaller systems. This claim is supported by findings from Magee et al. as they tested their code on a work station with a single GPU and CPU and obtained speedup \cite{Magee2018}. While this is not the primary focus, an optimized solver that reduces latency would require less computing resources and more practical applications could potentially be solved on smaller, less costly computing clusters. Hopefully, it is clear at this point that latency reduction is important in HPC and scientific applications as this is the intention of this work.
-
+The introduction should briefly place the study in a broad context and highlight why it is important. It should define the purpose of the work and its significance. The current state of the research field should be reviewed carefully and key publications cited. Please highlight controversial and diverging hypotheses when necessary. Finally, briefly mention the main aim of the work and highlight the principal conclusions. As far as possible, please keep the introduction comprehensible to scientists outside your particular field of research. Citing a journal paper \cite{ref-journal}. Now citing a book reference \cite{ref-book1,ref-book2} or other reference types \cite{ref-unpublish,ref-communication,ref-proceeding}. Please use the command \citep{ref-thesis,ref-url} for the following MDPI journals, which use author--date citation: Administrative Sciences, Arts, Econometrics, Economies, Genealogy, Histories, Humanities, IJFS, Journal of Intelligence, Journalism and Media, JRFM, Languages, Laws, Religions, Risks, Social Sciences.
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Materials and Methods}
-\label{methods-section}
-\subsection{Implementation \& Objectives}
-\pysweep{} comes with two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication between nodes during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep which serves as a baseline to the swept rule. Domain decomposition, process handling, and work allocation must occur prior to the beginning of the solution process. \Swept{} and \Standard{} both use the same decomposition, process handling, and work allocation code so that a performance comparison between solvers is representative of swept rule performance. \Swept{} does have some additional calculations prior to solving which are necessary for the swept rule solution process. These additional calculations are penalties of this swept rule implementation. 
 
-\par
-\pysweep{} was implemented using Python and CUDA; the parallelism relies primarily on \texttt{mpi4py} and \texttt{pycuda} \cite{DalcinMPIPython, KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. Consequently, the aforementioned implementation allowed us to meet the objectives of this study on the swept rule which included understanding:
+Materials and Methods should be described with sufficient details to allow others to replicate and build on published results. Please note that publication of your manuscript implicates that you must make all materials, data, computer code, and protocols associated with the publication available to readers. Please disclose at the submission stage any restrictions on the availability of materials or information. New methods and protocols should be described in detail while well-established methods can be briefly described and appropriately cited.
+
+Research manuscripts reporting large datasets that are deposited in a publicly avail-able database should specify where the data have been deposited and provide the relevant accession numbers. If the accession numbers have not yet been obtained at the time of submission, please state that they will be provided during review. They must be provided prior to publication.
+
+Interventionary studies involving animals or humans, and other studies require ethical approval must list the authority that provided approval and the corresponding ethical approval code.
+\begin{quote}
+This is an example of a quote.
+\end{quote}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results}
+
+This section may be divided by subheadings. It should provide a concise and precise description of the experimental results, their interpretation as well as the experimental conclusions that can be drawn.
+\subsection{Subsection}
+\subsubsection{Subsubsection}
+
+Bulleted lists look like this:
+\begin{itemize}
+\item	First bullet;
+\item	Second bullet;
+\item	Third bullet.
+\end{itemize}
+
+Numbered lists can be added as follows:
 \begin{enumerate}
-    \item Its performance on distributed heterogeneous computing systems,
-    \item Its performance with simple and complex numerical problems on heterogeneous systems,
-    \item The impact of different hardware on its performance,
-    \item The impact of input parameters on its performance.
+\item	First item; 
+\item	Second item;
+\item	Third item.
 \end{enumerate}
 
-\subsection{Parameters \& Testing}
-\label{parameters-section}
+The text continues here. 
 
-GPUs execute code on a "block-wise" basis, i.e., they solve all the points of a given three-dimensional block simultaneously. We refer to the dimensions of these blocks as \texttt{block size} or $b$---a single integer that represents the x and y dimension. The z dimension of the block was always unity because the solver is two-dimensional. The block size is a parameter of interest because it affects the performance of the swept rule by limiting the number of steps between communications. It also provides a natural basis for the decomposition of the data and imposes some further restrictions in the process.
+\subsection{Figures, Tables and Schemes}
 
-\par 
-The swept solution process restricts the block size to the interval $(2n,\,b_{max}]$ where $b_{max}$ is the maximum block size allowed by the hardware and $n$ is the maximum number of points on either side of any point $j$ used to calculate the derivatives. We defined the $b$ as Equation~\ref{blocksize-equation} because it allowed us to prove that the maximum number of steps in time based on the stencil is $k-1$ steps. It also allowed us to prove that the block's shortest dimension limits the number of steps for the swept rule. As such, we also restricted block size to being square ($x=y$).
-\begin{equation}
-    \label{blocksize-equation}
-    b  = 2nk,\quad k\in\mathbb{Z}^{+}\ni 2n < b \leq b_{max}
-\end{equation}
+All figures and tables should be cited in the main text as Figure~\ref{fig1}, Table~\ref{tab1}, etc.
 
-\par
-Blocks provide a natural unit for describing the amount of work, e.g, an $16\times16$ array has four $8\times8$ blocks to solve. As such, the work load of each process' GPU and CPU was determined by the GPU share, $s$, on a block-wise basis. A share of 1 corresponds to the GPU handling 100\% of the work. This is expressed mathematically in equation~\ref{share-equation} where $G$, $C$, and $W$ represent the number of GPU blocks, CPU blocks, and total blocks respectively. This parameter is of interest because it directly impacts the performance of the solvers.
-\begin{equation}
-    \label{share-equation}
-    s = \frac{G}{W} = 1-\frac{C}{W}
-\end{equation}
-In this implementation, the share does not account for the number of GPU or CPU cores available but simply divides the given input array based on the number of blocks in the x direction e.g. if the array contains $10$ blocks and $s=0.5$ then $5$ blocks will be deemed as GPU work and the remainder as CPU work. These portions of work would then be divided amongst available resources of each type. 
+\begin{figure}[H]
+\includegraphics[width=10.5 cm]{Definitions/logo-mdpi}
+\caption{This is a figure. Schemes follow the same formatting. If there are multiple panels, they should be listed as: (\textbf{a}) Description of what is contained in the first panel. (\textbf{b}) Description of what is contained in the second panel. Figures should be placed in the main text near to the first time they are cited. A caption on a single line should be centered.\label{fig1}}
+\end{figure}   
 
-\par
-Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted them to being evenly divisible by the block size for ease of decomposition. Square arrays were also only considered---so array size is represented by a single number which is the number of points in the x and y directions. Finally, array sizes were chosen as multiples of the largest block size; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
+% The MDPI table float is called specialtable
+\begin{specialtable}[H] 
+\caption{This is a table caption. Tables should be placed in the main text near to the first time they are~cited.\label{tab1}}
+%%% \tablesize{} %% You can specify the fontsize here, e.g., \tablesize{\footnotesize}. If commented out \small will be used.
+\begin{tabular}{ccc}
+\toprule
+\textbf{Title 1}	& \textbf{Title 2}	& \textbf{Title 3}\\
+\midrule
+Entry 1		& Data			& Data\\
+Entry 2		& Data			& Data\\
+\bottomrule
+\end{tabular}
+\end{specialtable}
 
-\par
-The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time (\textit{t}) before communication. As such, the aforementioned parameters were applied to solving the unsteady compressible Euler equations and the unsteady heat diffusion equation as was done in other works regarding the swept rule \cite{Alhubail2016,Alhubail2018,Magee2018, Magee2020}. The compressible Euler equations were applied to the isentropic Euler vortex and solved using a second order Runge-Kutta in time and a five point finite volume method in each spatial direction with a minmod flux limiter and Roe approximate Reimann solver \cite{SpiegelAMethods,Leveque2002}. The heat diffusion equation was applied to an analytical problem and solved using forward Euler method in time and a three point finite difference in each spatial direction. Further details on these methods and the associated problems is provided in~\ref{Heat-Diffusion} and~\ref{Compressible-Euler}.
+%\begin{listing}[H]
+%\caption{Title of the listing}
+%\rule{\columnwidth}{1pt}
+%\raggedright Text of the listing. In font size footnotesize, small, or normalsize. Preferred format: left aligned and single spaced. Preferred border format: top border line and bottom border line.
+%\rule{\columnwidth}{1pt}
+%\end{listing}
 
-\par
-To summarize the performance parameters, array size, block size, share, and the hardware were all varied in this study. Array sizes of [320, 480, 640, 800, 960, 1120] were used to make the total number of points span a couple orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. Along with these parameters, we advanced each problem 500 time steps on two different sets of hardware.
+Text.
 
-\par
-Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in \ref{Hardware} or the sources \cite{INTELXEON,INTELE5,NVIDIAGTX,NVIDIAV100}. Each of these sets was used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}. 
-
-\par 
-The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to three nodes consistent with hardware set 2. Each node was given an array size of 960 and solved both problems for 500 time steps, e.g, the case with three nodes solved an array with $2880^2$ total points. A share of 80\% and block size of 16 were used in this test. 
-
-\subsection{Swept Solution Process}
-\label{swept-process-section}
-To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. Discussion of the swept rule can at times be convoluted as there are time steps, swept steps, and other actions that can be referred to as steps. To simplify this, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase. Finally, we refer to individual time steps and intermediate time steps as so---such as those that occur during multi-step schemes. 
-
-\par
- We considered communication to be when the code was transferring data to other ranks. Node based rank communication between the CPU and GPUs happens via the use of shared memory; a capability implemented in MPICH-3 or later \cite{Hoefler2013MPIMemory}. Inter-node communication was performed with typical MPI constructs such as send and receive. A shared GPU memory approach was implemented by Magee et al. which showed benefit \cite{Magee2018}; this concept lead to the idea of using shared memory on each node for node communication and primary processes for inter-node communication.
- 
- \par
- We considered calculation to be specifically when the code was developing the solution in time. The specifics of CPU and GPU calculation depended on the particular phase the simulation was in. In general, the GPU calculation proceeded by copying the allocated section of the shared array to GPU memory and launched the appropriate kernel; the nature of GPU computing handled the rest. The CPU calculation began by disseminating predetermined blocks amongst the available processes. Each block was a portion of the shared memory which each process is allowed to modify.
- 
-\par
-There are four phases that occur during the swept solution process. In the code, we refer to them as \Up{}, \texttt{Bridge} (\texttt{X} or \texttt{Y}), \Oct{}, and \Down{}---that convention is continued here. We named them this way because these are the shapes produced during the solution procedure if you visualize the solution's progression in 3 dimensions (x,y,t); this is demonstrated in later figures for a general case. However, the specific shape that forms in each phase is a function of the spatial stencil and time scheme chosen to solve a given problem. As mentioned in section~\ref{parameters-section}, the maximum steps of the swept rule based on block size is $k-1$. The height or number of steps in time that each phase except \Oct{} can take is defined by equation~\ref{phase-height-equation}. The \Oct{} phase is of height $2h$.
-\begin{equation}
-    \label{phase-height-equation}
-    h=k-1
-\end{equation}
- 
-\par
-The first phase of calculation is the \Up{} shown in Figure \ref{fig:Up-Pyramid}. A dynamic programming approach was used on the CPU portion to calculate the \Up{} in lieu of conditional statements. Specifically, the indices to develop the \Up{} were stored in a set which was accessed as needed. The GPU portion implemented a conditional statement to accomplish this same task because its speed typically dwarfed that of the CPU regardless. If the code were to eventually be optimized, it could be beneficial to consider a dynamic programming approach such as that implemented on the CPU. In both cases, conditional or dynamic, the code removed $2n$ points from each boundary after every time step. If the time scheme required multiple intermediate time steps, these points were removed after each intermediate step. The initial boundaries of the \Up{} were the given block size and the final boundaries were found as $2n$ using equation~\ref{blocksize-equation} for $k=1$.
-
-\par The next phase in the process is referred to as the Bridge which occurs independently in each dimension. The solution procedure for the bridges on the CPU and GPU follows the same paradigm as the \Up{} but twice as many bridges are formed because there is one in each direction. The dimension in which the Bridge grows as time passes is its reference dimension e.g., the Bridge that grows in the y dimension as time progresses is referred to as the \Yb{}. The initial boundaries of each Bridge were determined from $n$ and $b$. The Bridges grew by $2n$ from these initial boundaries in their reference dimensions and shrank by $2n$ in the other dimension which allowed the appropriate calculation points to be determined conditionally or prior to calculation.
-
-\par
-Depending on the decomposition strategy, a large portion of the Bridges can be performed prior to inter-node communication. In this implementation, the \Yb{}---which is shown in Figure \ref{fig:YBridge}---was computed prior to the first communication. The first inter-node communication then occurred by shifting nodal data $b/2$ points in the positive x direction. Any data that exceeded the boundaries of its respective shared array was communicated to the appropriate adjacent node. This process is demonstrated in Figure \ref{fig:Comm1}. The shift in data allowed previously determined sets and blocks to be used in the upcoming calculation phases; so the \Xb{} proceeded directly after the communication as shown in \ref{fig:Xbridge}.
-
-\begin{figure}[!htb]
-    \centering
-    \subfloat[\Up{}: The first phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.pdf}
-      \label{fig:Up-Pyramid}
-    }
-    \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.pdf}
-       \label{fig:YBridge}
-    }
-    
-    \subfloat[The first communication of the solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.pdf}
-       \label{fig:Comm1}
-    }
-    \subfloat[\Xb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.pdf}
-       \label{fig:Xbridge}
-    }
-    \caption{The first four steps in the swept solution process.}
-    \label{fig:MainOne}
-\end{figure}
-
-\par
-The first three phases in the swept solution process demonstrated in Figure~\ref{fig:MainOne} were followed by the \Oct{} phase shown in Figure~\ref{fig:Octahedron}. This phase is a superposition of the \Down{} and \Up{}. The \Down{}---shown in \ref{fig:Down-Pyramid}---always began with boundaries that were $2n$ and grew by $2n$ on each boundary with every passing time step. The start was a natural consequence of removing these points during the \Up{} phase. The \Down{} was completed upon passing the top of the previous \Up{} or \Oct{} at which time the upward portion of \Oct phase began. The entire \Oct{} was calculated in the same fashion as the \Up{} on both CPUs and GPUs. While the steps are described separately for clarity, they were performed in a single calculation step without communication between ranks. 
-
-\par
-The \Oct{} was always followed by the \Yb{}, Communicate, \Xb{} sequence. However, the communication varied in direction as the shift and communication of data was always the opposite of the former communication. We repeated this series of events as many times as was necessary to reach the final desired time of the simulation. The final phase is the aforementioned \Down{} which occurred only once at the end of the simulation. We show the ending sequence---minus the communication---in its entirety in Figure~\ref{fig:MainTwo}. 
-\par
-To summarize the progression of swept phases, the \Up{} was calculated a single time; The Bridge and \Oct{} phases were then repeated until the simulation reached a value greater than or equal to that of the desired final time. Finally, the \Down{} was executed finally to fill in the remaining portion of the solution.
-
-% Octahedron
-\begin{figure}[!htb]
-    \centering
-    \subfloat[\Oct{}: An intermediate phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.pdf}
-      \label{fig:Octahedron}
-    }
-    \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.pdf}
-       \label{fig:YBridge2}
-    }
-
-    \subfloat[\Xb{}: The next phase of the solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.pdf}
-       \label{fig:XBridge2}
-    }
-    \subfloat[\Down{}: The final phase of the swept process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.pdf}
-       \label{fig:Down-Pyramid}
-    }
-    \caption{The intermediate and final steps of the swept solution.}
-    \label{fig:MainTwo}
-\end{figure}
-
-\par
-The final number of time steps taken by a swept simulation was determined by the number of \Oct{} phases ($2h$ time steps) that most accurately captured the specified number of time steps. This is a consequence of the swept rule; the exact number of steps is not always achievable in some cases because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. In between each calculation step, a communication step occurs which consists of shared memory data management and writing to disk.
-
-\par The shared memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting of the data which is a strategy implemented for handling boundary blocks in the array. \pysweep{} was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally form in the direction orthogonal to the boundary (e.g. During the \Oct{} phase on the boundary where $x=0$, only half the \Oct{} will be formed in the x direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, a data shifting strategy was implemented which allows the majority of the same functions and kernels to be used. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of moving the data in memory. In hindsight, changing the perspective of each process, i.e. the data it sees and manages, may be a more optimal way to implement this strategy.
-
-\par \pysweep{} writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write its data to disk independently of other ranks \cite{Collette2008HDF5Python}. The shared memory array is the height of an \Oct{} in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then moved down in the time dimension of the array and so that the next phase can be calculated in the existing space.
-
-\par
-In summary of this swept rule solution process, \pysweep{} is an extensible PDE solver that implements the swept rule in 2 dimensions on heterogeneous architecture. It consists of two primary steps which are calculation and communication. The calculation computes points based on a predictable patterns referenced as the phases of the simulation. The communication occurs after the \Yb{} forms along with shifting of the data so that the same logic may be used to calculate all of the points in the array. This shifting strategy provides simple communication logic at a minimal expense. The four phases---\Up{}, Bridge (X or Y), \Oct{}, and \Down{}---are the predictable shapes used to solve the problem in time. These shapes are available in Figures \ref{fig:MainOne} and \ref{fig:MainTwo}. 
-\par
-The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions but can be modified to suit other conditions using the same strategy. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. \pysweep{} could certainly be further optimized but it is presently sufficient to test and determine the performance capabilities of the two-dimensional heterogeneous swept rule in comparison to a traditional solver.
-
+Text.
 
 \subsection{Formatting of Mathematical Components}
 
@@ -479,38 +357,38 @@ All appendix sections must be cited in the main text. In the appendices, Figures
 %=====================================
 % References, variant A: external bibliography
 %=====================================
-\externalbibliography{yes}
-\bibliography{references}
+%\externalbibliography{yes}
+%\bibliography{your_external_BibTeX_file}
 
 %=====================================
 % References, variant B: internal bibliography
 %=====================================
-% \begin{thebibliography}{999}
-% % Reference 1
-% \bibitem[Author1(year)]{ref-journal}
-% Author~1, T. The title of the cited article. {\em Journal Abbreviation} {\bf 2008}, {\em 10}, 142--149.
-% % Reference 2
-% \bibitem[Author2(year)]{ref-book1}
-% Author~2, L. The title of the cited contribution. In {\em The Book Title}; Editor1, F., Editor2, A., Eds.; Publishing House: City, Country, 2007; pp. 32--58.
-% % Reference 3
-% \bibitem[Author3(year)]{ref-book2}
-% Author 1, A.; Author 2, B. \textit{Book Title}, 3rd ed.; Publisher: Publisher Location, Country, 2008; pp. 154--196.
-% % Reference 4
-% \bibitem[Author4(year)]{ref-unpublish}
-% Author 1, A.B.; Author 2, C. Title of Unpublished Work. \textit{Abbreviated Journal Name} stage of publication (under review; accepted; in~press).
-% % Reference 5
-% \bibitem[Author5(year)]{ref-communication}
-% Author 1, A.B. (University, City, State, Country); Author 2, C. (Institute, City, State, Country). Personal communication, 2012.
-% % Reference 6
-% \bibitem[Author6(year)]{ref-proceeding}
-% Author 1, A.B.; Author 2, C.D.; Author 3, E.F. Title of Presentation. In Title of the Collected Work (if available), Proceedings of the Name of the Conference, Location of Conference, Country, Date of Conference; Editor 1, Editor 2, Eds. (if available); Publisher: City, Country, Year (if available); Abstract Number (optional), Pagination (optional).
-% % Reference 7
-% \bibitem[Author7(year)]{ref-thesis}
-% Author 1, A.B. Title of Thesis. Level of Thesis, Degree-Granting University, Location of University, Date of Completion.
-% % Reference 8
-% \bibitem[Author8(year)]{ref-url}
-% Title of Site. Available online: URL (accessed on Day Month Year).
-% \end{thebibliography}
+\begin{thebibliography}{999}
+% Reference 1
+\bibitem[Author1(year)]{ref-journal}
+Author~1, T. The title of the cited article. {\em Journal Abbreviation} {\bf 2008}, {\em 10}, 142--149.
+% Reference 2
+\bibitem[Author2(year)]{ref-book1}
+Author~2, L. The title of the cited contribution. In {\em The Book Title}; Editor1, F., Editor2, A., Eds.; Publishing House: City, Country, 2007; pp. 32--58.
+% Reference 3
+\bibitem[Author3(year)]{ref-book2}
+Author 1, A.; Author 2, B. \textit{Book Title}, 3rd ed.; Publisher: Publisher Location, Country, 2008; pp. 154--196.
+% Reference 4
+\bibitem[Author4(year)]{ref-unpublish}
+Author 1, A.B.; Author 2, C. Title of Unpublished Work. \textit{Abbreviated Journal Name} stage of publication (under review; accepted; in~press).
+% Reference 5
+\bibitem[Author5(year)]{ref-communication}
+Author 1, A.B. (University, City, State, Country); Author 2, C. (Institute, City, State, Country). Personal communication, 2012.
+% Reference 6
+\bibitem[Author6(year)]{ref-proceeding}
+Author 1, A.B.; Author 2, C.D.; Author 3, E.F. Title of Presentation. In Title of the Collected Work (if available), Proceedings of the Name of the Conference, Location of Conference, Country, Date of Conference; Editor 1, Editor 2, Eds. (if available); Publisher: City, Country, Year (if available); Abstract Number (optional), Pagination (optional).
+% Reference 7
+\bibitem[Author7(year)]{ref-thesis}
+Author 1, A.B. Title of Thesis. Level of Thesis, Degree-Granting University, Location of University, Date of Completion.
+% Reference 8
+\bibitem[Author8(year)]{ref-url}
+Title of Site. Available online: URL (accessed on Day Month Year).
+\end{thebibliography}
 
 % If authors have biography, please use the format below
 %\section*{Short Biography of Authors}
