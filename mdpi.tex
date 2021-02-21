@@ -73,6 +73,7 @@
 \def\Oct{\texttt{Octahedron}}
 \def\Xb{\texttt{X-Bridge}}
 \def\Yb{\texttt{Y-Bridge}}
+\newcommand\fs{1}
 
 \def\oldCPU{Intel Skylake Silver 4114} %20 core cpu
 \def\oldGPU{Nvidia GeForce GTX 1080 Ti}
@@ -267,37 +268,40 @@ The first phase of calculation is the \Up{} shown in Figure \ref{fig:Up-Pyramid}
 \par
 Depending on the decomposition strategy, a large portion of the Bridges can be performed prior to inter-node communication. In this implementation, the \Yb{}---which is shown in Figure \ref{fig:YBridge}---was computed prior to the first communication. The first inter-node communication then occurred by shifting nodal data $b/2$ points in the positive x direction. Any data that exceeded the boundaries of its respective shared array was communicated to the appropriate adjacent node. This process is demonstrated in Figure \ref{fig:Comm1}. The shift in data allowed previously determined sets and blocks to be used in the upcoming calculation phases; so the \Xb{} proceeded directly after the communication as shown in \ref{fig:Xbridge}.
 
-
-\begin{figure}[H]
+\end{paracol}
+\begin{figure}[!htb]
     \widefigure
-    \centering
-    \subfloat[\Up{}: The first phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.pdf}
-      \label{fig:Up-Pyramid}
-    }
-    \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.pdf}
-       \label{fig:YBridge}
-    }
-    
-    \subfloat[The first communication of the solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.pdf}
-       \label{fig:Comm1}
-    }
-    \subfloat[\Xb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.pdf}
-       \label{fig:Xbridge}
-    }
-    \caption{The first four steps in the swept solution process.}
+    \begin{center}
+        \includegraphics[scale=\fs, trim={1cm 0.6cm 0.5cm 0.2cm},clip]{figs/SubsPlot1.pdf}
+    \end{center}
+    \caption{The first four steps in the swept solution process: \Up{} (top left), \Yb{} (top right), \texttt{Communication} (bottom left), \Xb{} (bottom right)}
     \label{fig:MainOne}
 \end{figure}
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
+
+% \subfloat[\Up{}: The first phase of the swept solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/UpPyramid1.pdf}
+%       \label{fig:Up-Pyramid}
+%     }
+%     \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge1.pdf}
+%       \label{fig:YBridge}
+%     }
+    
+%     \subfloat[The first communication of the solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/Comm1.pdf}
+%       \label{fig:Comm1}
+%     }
+%     \subfloat[\Xb{}: The subsequent phase of the swept solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge1.pdf}
+%       \label{fig:Xbridge}
+%     }
 
 \par
 The first three phases in the swept solution process demonstrated in Figure~\ref{fig:MainOne} were followed by the \Oct{} phase shown in Figure~\ref{fig:Octahedron}. This phase is a superposition of the \Down{} and \Up{}. The \Down{}---shown in \ref{fig:Down-Pyramid}---always began with boundaries that were $2n$ and grew by $2n$ on each boundary with every passing time step. The start was a natural consequence of removing these points during the \Up{} phase. The \Down{} was completed upon passing the top of the previous \Up{} or \Oct{} at which time the upward portion of \Oct phase began. The entire \Oct{} was calculated in the same fashion as the \Up{} on both CPUs and GPUs. While the steps are described separately for clarity, they were performed in a single calculation step without communication between ranks. 
@@ -308,32 +312,42 @@ The \Oct{} was always followed by the \Yb{}, Communicate, \Xb{} sequence. Howeve
 To summarize the progression of swept phases, the \Up{} was calculated a single time; The Bridge and \Oct{} phases were then repeated until the simulation reached a value greater than or equal to that of the desired final time. Finally, the \Down{} was executed finally to fill in the remaining portion of the solution.
 
 % Octahedron
+\end{paracol}
 \begin{figure}[!htb]
-    \centering
-    \subfloat[\Oct{}: An intermediate phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.pdf}
-      \label{fig:Octahedron}
-    }
-    \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.pdf}
-       \label{fig:YBridge2}
-    }
-
-    \subfloat[\Xb{}: The next phase of the solution process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.pdf}
-       \label{fig:XBridge2}
-    }
-    \subfloat[\Down{}: The final phase of the swept process.]
-    {
-      \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.pdf}
-       \label{fig:Down-Pyramid}
-    }
-    \caption{The intermediate and final steps of the swept solution.}
+    \widefigure
+    \begin{center}
+        \includegraphics[scale=\fs, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/SubsPlot2.pdf}
+    \end{center}
+    \caption{The intermediate and final steps of the swept solution: }
     \label{fig:MainTwo}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+% \centering
+%     \subfloat[\Oct{}: An intermediate phase of the swept solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/Octahedron1.pdf}
+%       \label{fig:Octahedron}
+%     }
+%     \subfloat[\Yb{}: The subsequent phase of the swept solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},clip]{figs/YBridge2.pdf}
+%       \label{fig:YBridge2}
+%     }
+
+%     \subfloat[\Xb{}: The next phase of the solution process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/XBridge2.pdf}
+%       \label{fig:XBridge2}
+%     }
+%     \subfloat[\Down{}: The final phase of the swept process.]
+%     {
+%       \includegraphics[scale=0.75, trim={1cm 0.6cm 0.5cm 0cm},,clip]{figs/DownPyramid1.pdf}
+%       \label{fig:Down-Pyramid}
+%     }
+
 
 \par
 The final number of time steps taken by a swept simulation was determined by the number of \Oct{} phases ($2h$ time steps) that most accurately captured the specified number of time steps. This is a consequence of the swept rule; the exact number of steps is not always achievable in some cases because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. In between each calculation step, a communication step occurs which consists of shared memory data management and writing to disk.
@@ -354,12 +368,17 @@ The solver has a few restrictions based on architecture and implementation which
 \label{hdeResults}
 The heat diffusion equation was solved numerically using Forward Euler in time and a three point central difference in space. We validated it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation is shown in Appendix~\ref{Heat-Diffusion}. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:heatSurface} and behave as expected.
 
+\end{paracol}
 \begin{figure}[htb!]
-    \centering
-    \includegraphics{figs/heatValidate.pdf}
-    \caption{Heat equation contours over 2500 time steps}
+    \begin{center}
+        \includegraphics{figs/heatValidate.pdf}
+    \end{center}
+    \caption{Heat equation contours over 2000 time steps}
     \label{fig:heatSurface}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share. It was calculated based on the run time, $R_i$, of a simulation $i$ as
 \begin{equation}
@@ -368,30 +387,41 @@ Our performance metric of choice for the swept rule was speedup, $S$, as a funct
 The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} for the two sets of hardware as described in section~\ref{parameters-section}. 
 A third contour of speedup is shown in Figure~\ref{fig:heatHardwareComp} to compare the performance across the differing hardware. This speedup is found as $R_{swept,2}/R_{swept,1}$. In these figures, a black dot with a white border represents the worst case and a white dot with a black border represents the best case.
 
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/speedUpheatNew.pdf}
+    \includegraphics[scale=\fs]{figs/speedUpheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupHeat}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 In Figure~\ref{fig:newSpeedupHeat} there is an average speedup of 1.19. It is clear that the performance of the swept rule diminishes as the array size is increased. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12-20. The majority of best cases lie between 90-100\% share and the 12-20 block size range. It is quite interesting that the worst cases lie very close to the optimal cases. They lie between 90-100\% share but outside the block size limits 12-20.
-
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/speedUpheatOld.pdf}
+    \includegraphics[scale=\fs]{figs/speedUpheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with an average speedup of 1.11. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. The majority of best cases occur at or below a 50\% share and between block sizes 12-24. The majority of worst cases exist between 80-100\% share and between block sizes of 20-32 with a couple cases being on the upper limit.
 
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/hardwareSpeedupheat.pdf}
+    \includegraphics[scale=\fs]{figs/hardwareSpeedupheat.pdf}
     \caption{Hardware speedup comparison for the heat diffusion equation.}
     \label{fig:heatHardwareComp}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two with an average speedup of 0.85. Set one's best speedup is 1.08 and its worst is 0.20. Speedup is worst with shares above approximately 75\% and block sizes outside 16-24. It is best above a share of 80\% and below a share of 25\% with a large range of block sizes---a block size of 8 is the only point where an optimal case does not occur. However, three of the six best cases occur at a block size of 32.
 
@@ -401,45 +431,60 @@ The Euler equations were solved numerically using a second order Runge-Kutta in 
 
 The same tests that we performed in Section~\ref{hdeResults} were repeated here. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface}. The differences in this case are less apparent than in Figure~\ref{fig:heatSurface} but, they behave as expected. 
 
+\end{paracol}
 \begin{figure}[htb!]
     \centering
     \includegraphics{figs/eulerValidate.pdf}
     \caption{Euler equations contours over 500 time steps}
     \label{fig:eulerSurface}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 The first hardware set results, Figure~\ref{fig:newSpeedupEuler}, show that the \Swept{} solver is consistently slower than \Standard{} with an average speedup of 0.95. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The majority of the best cases occur above approximately 90\% share but there is no clear block size trend. The majority of the worst cases occur at 100\% share but likewise a block size trend is unclear. However, in the three largest array sizes they always occur at 100\% share with a block size of 8.
 
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/speedUpeulerNew.pdf}
+    \includegraphics[scale=\fs]{figs/speedUpeulerNew.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 The second hardware set results, Figure~\ref{fig:oldSpeedupEuler}, show that the \Swept{} solver is consistently slower than \Standard{} with an average speedup of 0.94. Again, performance declines with increasing array size but there is benefit in some cases. The majority of the best cases occur below approximately 50\% share with a block size between 12-24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
 
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/speedUpeulerOld.pdf}
+    \includegraphics[scale=\fs]{figs/speedUpeulerOld.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 Figure~\ref{fig:eulerHardwareComp} shows the comparison between the two hardware sets for the \Swept{} solver. On average, the first set of hardware is slower than the second with an average speedup of 0.95. Set one's best speedup is 1.50 and its worst is 0.73. There are however regions in which performance benefits of the first set are evident. Shares above 90\% across most block sizes and array sizes are evidence of this. Otherwise, the results are worse. 
-
+\end{paracol}
 \begin{figure}[htb!]
     \centering
-    \includegraphics[scale=0.7]{figs/hardwareSpeedUpeuler.pdf}
+    \includegraphics[scale=\fs]{figs/hardwareSpeedUpeuler.pdf}
     \caption{Hardware speedup comparison for the Euler equations.}
     \label{fig:eulerHardwareComp}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 \subsection{Weak-scalability}
 These results raised some questions about the performance, e.g., why the swept rule performance decreases with increasing array size. We considered the weak-scalability of the algorithms to explore this. Figure~\ref{fig:scalability} shows that the \Standard{} solver has better weak-scalability than \Swept{} for both problems. However, the slope is more shallow for the heat diffusion equation than it is for the Euler equations. 
 \begin{figure}
     \centering
-    \includegraphics[scale=1, trim={5cm 2cm 5cm 3.5cm}]{figs/weakScalability.pdf}
+    \includegraphics[scale=\fs, trim={5cm 2cm 5cm 3.5cm}]{figs/weakScalability.pdf}
     \caption{Weak-scalability of the \Swept{} and \Standard{} algorithms.}
     \label{fig:scalability}
 \end{figure}
