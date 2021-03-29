@@ -244,7 +244,7 @@ To summarize the performance parameters, array size, block size, share, and the 
 Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. \pysweep{} was tested separately with 32 processes on two sets of hardware. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in \ref{Hardware} or the sources \cite{Intel123550,Intel91753,GeForceGeForce,NVIDIANVIDIA}. Each of these sets was used to solve both the compressible Euler equations and heat diffusion equation for 500 time steps. The performance data we collected from this evaluation is presented in section~\ref{results-section}. 
 
 \par 
-The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to three nodes consistent with hardware set 2. Each node was given an array size of 960 and solved both problems for 500 time steps, e.g, the case with three nodes solved an array with $2880^2$ total points. A share of 80\% and block size of 16 were used in this test. 
+The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to three nodes consistent with hardware set two. Each node was given approximately two million spatial points and solved both problems for five hundred time steps. A share of 90\% and block size of 16 were used in this test. 
 
 \subsection{Swept Solution Process}
 \label{swept-process-section}
@@ -485,7 +485,7 @@ These results raised some questions about the performance, e.g., why the swept r
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.7cm 2.5cm 1.5cm 1.5cm},clip]{figs/weakScalability.pdf}
+        \includegraphics[scale=\fs, trim={0.1cm 0.25cm 1cm 1cm},clip]{figs/weakScalability.pdf}
         \caption{Weak-scalability of the \Swept{} and \Standard{} algorithms.}
         \label{fig:scalability}
     \end{center}
