@@ -239,10 +239,10 @@ In our implementation, the share does not account for the number of GPU or CPU c
 Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. Finally, array sizes were chosen as multiples of the largest block size; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
 
 \par
-The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler's equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler's equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge-Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
+The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge-Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
 
 \par
-Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. The methods were tested separately with 32 processes. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in Appendix~\ref{Hardware}. Each of these sets was used to solve both the heat diffusion equation and the compressible Euler's equations. Section~\ref{results-section} present the performance data we collected. 
+Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. The methods were tested separately with 32 processes. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Further information on these devices is located in Appendix~\ref{Hardware}. Each of these sets was used to solve both the heat diffusion equation and the compressible Euler equations. Section~\ref{results-section} present the performance data we collected. 
 
 \par 
 The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to four nodes. Each node was given approximately two million spatial points and solved both problems for five hundred time steps. A share of 90\% and block size of 16 were used in this test. 
@@ -270,7 +270,7 @@ The first phase of calculation is the \Up{} shown in Figure~\ref{fig:MainOne} (t
 
 \begin{figure}[H]
     \begin{center}
-        \includegraphics[scale=\fs, trim={1cm 0.6cm 0.25cm 0.2cm},clip]{figs/SubsPlot1.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={1cm 0.6cm 0.25cm 0.2cm},clip]{figs/SubsPlot1.pdf}
     \end{center}
     \caption{The first four steps in the swept solution process: \Up{} (top left), \Yb{} (top right), \texttt{Communication} (bottom left), and \Xb{} (bottom right).}
     \label{fig:MainOne}
@@ -289,7 +289,7 @@ The \Oct{} always precedes the \Yb{}, Communicate, \Xb{} sequence. However, the 
 
 \begin{figure}[H]
     \begin{center}
-        \includegraphics[scale=\fs, trim={1cm 0.6cm 0.25cm 0cm},clip]{figs/SubsPlot2.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={1cm 0.6cm 0.25cm 0cm},clip]{figs/SubsPlot2.pdf}
     \end{center}
     \caption{The intermediate and final steps of the swept solution: \Oct{} (top left), \Xb{} (top right), \Yb (bottom left), and \Down{} (bottom right).}
     \label{fig:MainTwo}
@@ -315,9 +315,8 @@ Here we present the results of applying \pysweep{} to the heat transfer and comp
 We solved the heat diffusion equation numerically using forward-Euler and a three-point central difference in space. We verified it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation described in Appendix~\ref{Heat-Diffusion}. Figure~\ref{fig:heatSurface} compares the temperature distribution of the numerical and analytical solutions over time. The temperature distribution is representative of a flat plate with a checkerboard pattern of hot and cold spots. We see these spots diffuse out over time and approach a steady intermediate temperature which is expected. We also see that the numerical solution matches the analytical solution which verifies that we are solving the problem correctly.
 
 \begin{figure}[H]
-    
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.9cm 0.4cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.9cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
     \end{center}
     \caption{Heat equation contours over 2000 time steps}
     \label{fig:heatSurface}
@@ -333,7 +332,7 @@ Figure~\ref{fig:heatHardwareComp} shows a third contour of speedup to compare th
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatNew.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatNew.pdf}
         \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
         \label{fig:newSpeedupHeat}
     \end{center}
@@ -342,41 +341,24 @@ Figure~\ref{fig:heatHardwareComp} shows a third contour of speedup to compare th
 
 
 
-In Figure~\ref{fig:newSpeedupHeat} there is an average speedup of 1.19. It is clear that the performance of the swept rule diminishes as the array size is increased. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12-20. The majority of best cases lie between 90-100\% share and the 12-20 block size range. It is quite interesting that the worst cases lie very close to the optimal cases. They lie between 90-100\% share but outside the block size limits 12-20.
+Figure~\ref{fig:newSpeedupHeat} shows an average speedup of 1.19. It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12-20. The majority of best cases lie between 90-100\% share and the 12-20 block size range. The worst performing cases lie close to the optimal cases: between 90-100\% share but outside the block size limits 12-20.
 
 
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatOld.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatOld.pdf}
         \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
         \label{fig:oldSpeedupHeat} 
     \end{center}
 \end{figure}
 
 
+In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with an average speedup of 1.11. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tend to occur at or below a 50\% share and between block sizes 12-24. The worst case for a given array size tend to occur between 80-100\% share and between block sizes of 20-32 with a couple occurences on the upper limit.
 
-
-In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with an average speedup of 1.11. The array size trend holds but trends based on the other two parameters are unclear. It seems that performance is better with lower shares in the case of this hardware and somewhat consistent across different block sizes. The majority of best cases occur at or below a 50\% share and between block sizes 12-24. The majority of worst cases exist between 80-100\% share and between block sizes of 20-32 with a couple cases being on the upper limit.
-
-
-\begin{figure}[H]
-    
-    \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/hardwareSpeedupheat.pdf}
-        \caption{Hardware speedup comparison for the heat diffusion equation.}
-        \label{fig:heatHardwareComp}
-    \end{center}
-\end{figure}
-
-
-
-
-In Figure~\ref{fig:heatHardwareComp} we see that hardware set one is consistently slower than hardware set two with an average speedup of 0.85. Set one's best speedup is 1.08 and its worst is 0.20. Speedup is worst with shares above approximately 75\% and block sizes outside 16-24. It is best above a share of 80\% and below a share of 25\% with a large range of block sizes---a block size of 8 is the only point where an optimal case does not occur. However, three of the six best cases occur at a block size of 32.
-
-\subsection{Compressible Euler's Equations}
+\subsection{Compressible Euler Equations}
 \label{eulerVortexResults}
-The Euler equations were solved numerically using a second order Runge-Kutta in time and a five point central difference in space with a minmod flux limiter and Roe approximate Riemann solver which we validated against the isentropic Euler Vortex \cite{SpiegelAMethods}.
+We solved the Euler equations using a second-order Runge-Kutta in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex \cite{SpiegelAMethods}.
 
 The same tests that we performed in Section~\ref{hdeResults} were repeated here. The performance results produced by these simulations are shown in Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} for the two sets of hardware as described in section~\ref{parameters-section}. A third contour of speedup is shown in Figure~\ref{fig:eulerHardwareComp} to compare the performance across the differing hardware. The numerical and analytical solutions are graphically compared in Figure~\ref{fig:eulerSurface}. The differences in this case are less apparent than in Figure~\ref{fig:heatSurface} but, they behave as expected. 
 
@@ -384,7 +366,7 @@ The same tests that we performed in Section~\ref{hdeResults} were repeated here.
 \begin{figure}[H]
     
     \begin{center}
-       \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.2cm 0.2cm},clip]{figs/eulerValidate.pdf}
+       \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.3cm 0.2cm 0.2cm},clip]{figs/eulerValidate.pdf}
     \caption{Euler equations contours over 500 time steps}
     \label{fig:eulerSurface} 
     \end{center}
@@ -399,7 +381,7 @@ The first hardware set results, Figure~\ref{fig:newSpeedupEuler}, show that the 
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerNew.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerNew.pdf}
         \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
         \label{fig:newSpeedupEuler}
     \end{center}
@@ -414,7 +396,7 @@ The second hardware set results, Figure~\ref{fig:oldSpeedupEuler}, show that the
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerOld.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerOld.pdf}
         \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
         \label{fig:oldSpeedupEuler}
     \end{center}
@@ -428,13 +410,20 @@ Figure~\ref{fig:eulerHardwareComp} shows the comparison between the two hardware
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/hardwareSpeedUpeuler.pdf}
-        \caption{Hardware speedup comparison for the Euler equations.}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/hardwareSpeedUpeuler.pdf}
+        \caption{\Swept{} hardware speedup comparison for the Euler equations.}
         \label{fig:eulerHardwareComp}
     \end{center}
 \end{figure}
 
-
+\begin{figure}[H]
+    
+    \begin{center}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/hardwareStandardSpeedUpeuler.pdf}
+        \caption{\Standard{} hardware speedup comparison for the Euler equations.}
+        \label{fig:eulerHardwareCompStd}
+    \end{center}
+\end{figure}
 
 
 \subsection{Weak-scalability}
@@ -443,7 +432,7 @@ These results raised some questions about the performance, e.g., why the swept r
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.1cm 0.25cm 1cm 0.5cm},clip]{figs/weakScalability.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.1cm 0.25cm 1cm 0.5cm},clip]{figs/weakScalability.pdf}
         \caption{Weak-scalability of the \Swept{} and \Standard{} algorithms.}
         \label{fig:scalability}
     \end{center}
@@ -474,7 +463,7 @@ Scalability and array size aside, performance is also tied to the block size. It
 \begin{figure}[H]
     
     \begin{center}
-        \includegraphics[scale=\fs, trim={0.5cm 0.4cm 0.5cm 0.2cm},clip]{figs/clockTimeSwepteulerOld.pdf}
+        \includegraphics[height=9cm,width=0.78\textwidth, trim={0.5cm 0.4cm 0.5cm 0.2cm},clip]{figs/clockTimeSwepteulerOld.pdf}
         \caption{Clock time results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
         \label{fig:clocktimeOldEuler}
     \end{center}
@@ -554,7 +543,7 @@ The compressible Euler equations and the equation of state used are as follows w
     &E_t = ((E+P)u)_x+((E+P)v)_y\\
     &E = \frac{P}{\gamma -1}+\frac{1}{2}\rho(u^2+v^2)
 \end{align*}
-The analytical solution to the isentropic Euler vortex was used as the initial conditions and in validation. The analytical solution was developed from \cite{SpiegelAMethods}. The solution is simple in the sense that it is just translation of the initial conditions. It involves superimposing perturbations in the form:
+The analytical solution to the isentropic Euler vortex was used as the initial conditions and in verification. The analytical solution was developed from \cite{SpiegelAMethods}. The solution is simple in the sense that it is just translation of the initial conditions. It involves superimposing perturbations in the form:
 \begin{align*}
     &\delta u = -\frac{y}{R}\Omega\\
     &\delta v = -\frac{x}{R}\Omega\\
