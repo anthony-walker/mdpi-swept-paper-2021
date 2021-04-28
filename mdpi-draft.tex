@@ -430,8 +430,6 @@ For the Euler equations, we see an overall speedup range of 0.52--1.46 for the f
 These speedups are better aligned with values reported in other studies. 
 The two-dimensional CPU version reported a speedup of at most 4~\cite{Alhubail2018ThePDEs}, the one-dimensional GPU version reported 0.53--0.83~\cite{Magee2018AcceleratingDecomposition}, and the one-dimensional heterogeneous version reported 1.1--2.0 \cite{Magee2020ApplyingSystems}.
 
-Trends of
-
 It is consistent between studies that the swept rule performance declines as numerical complexity increases. We suspect that the magnitude of speedups differ noticeably because performance is partially implementation based. Regardless, the swept rule can be helpful or harmful to simulation performance but testing is required to in the process. It depends on the problem solved, desired numerical scheme, and implementation.  
 We see from the contours that the more complicated problem generally performs worse. In contrast, the heat equation shows quite a few areas of speed up for lower array sizes. 
 
