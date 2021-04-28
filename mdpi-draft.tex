@@ -62,7 +62,15 @@
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, changepage, paracol, attrib, upgreek, cleveref, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
 
 \usepackage{amsmath}
-
+\usepackage{xcolor}
+\usepackage[xcolor]{changebar}
+\usepackage[normalem]{ulem}
+% %Reviewer Colors
+\definecolor{revOne}{HTML}{cc0000}
+\definecolor{revTwo}{HTML}{cc9900}
+\definecolor{revTypo}{HTML}{0057fa}
+\newcommand{\revised}[2]{{\sloppy\cbcolor{#2}\textcolor{#2}{\cbstart {#1} \cbend}}}  % add
+\newcommand{\former}[2]{\sloppy\cbcolor{#2}\textcolor{#2}{\cbdelete\sout{#1}}}
 
 %----------------MACROS--------------------
 \def\github{\url{https://github.com/anthony-walker/pysweep-git}}
@@ -81,6 +89,12 @@
 
 \def\newCPU{Intel E5-2698v4} %20 core cpu
 \def\newGPU{Nvidia Tesla V100-DGXS-32GB}
+
+
+
+
+
+
 
 %=================================================================
 %% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
@@ -128,7 +142,7 @@ Corvallis, Oregon, USA}
 % Abstract (Do not insert blank lines, i.e. \\) 
 \abstract{The partial differential equations describing compressible fluid flows can be notoriously difficult to resolve on a pragmatic scale and often require the use of high performance computing systems and/or accelerators. 
 However, these systems face scaling issues such as latency, the fixed cost of communicating information between devices in the system. The swept rule is a technique designed to minimize these costs by obtaining a solution to unsteady equations at as many possible spatial locations and times prior to communicating. 
-In this study, we implemented and tested the swept rule for solving two-dimensional problems on heterogeneous computing systems across two distinct systems. Our solver showed a speedup range of 0.22--2.71 for the heat diffusion equation and 0.52--1.46 for the compressible Euler equations. 
+In this study, we implemented and tested the swept rule for solving two-dimensional problems on heterogeneous computing systems across two distinct systems \textcolor{revOne}{and three key parameters: array size, block size, and share.} Our solver showed a speedup range of 0.22--2.71 for the heat diffusion equation and 0.52--1.46 for the compressible Euler equations. 
 We can conclude from this study that the swept rule offers both potential for speedups and slowdowns and that care should be taken when designing such a solver to maximize benefits. These results can help make decisions to maximize these benefits and inform designs.}
 
 % Keywords
@@ -167,7 +181,7 @@ We can conclude from this study that the swept rule offers both potential for sp
 \begin{document}
 
 \section{Introduction}
-Partial differential equations (PDEs) are used to model many important phenomena in science and engineering. Among these, fluid mechanics and heat transfer are which can be notoriously difficult to solve on pragmatic scales. Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemical reactions over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such phenomena in real time would allow for better responses, but there are many challenges associated with making these predictions.
+Partial differential equations (PDEs) are used to model many important phenomena in science and engineering. Among these, fluid mechanics and heat transfer are which can be notoriously difficult to solve on pragmatic scales. \former{Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemical reactions over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time.}{revTwo} \revised{Compressible flow is a good example of an expensive numerical simulation because it involves fluid mechanics and heat transfer over massive areas of impact. Compressible flow can also be unsteady---so it changes over time.}{revTwo}The ability to accurately model and predict the properties of such phenomena in real time would allow for better responses, but there are many challenges associated with making these predictions.
 
 Unsteady multi-dimensional PDEs often require using of distributed-memory computing systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. Advancing the solution at any point in the grid inherently depends on the neighboring points in each spatial dimension. This dependence requires communication between computing nodes, to transfer data associated with the boundary locations. Each of these communications incurs a minimum cost regardless of the amount of information communicated---this is network latency. In contrast, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can significantly restrict the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the ``latency barrier'' and it impacts large-scale simulations that involve advancing many time steps, i.e., ones that require a large amount of communication \cite{Alhubail2016ThePDEs}. 
 The barrier is a bottleneck in the system that can limit the performance regardless of the architecture.
@@ -184,7 +198,7 @@ However, there are some stability concerns with Parareal that are addressed by l
 Finally, communication avoidance techniques closely emulate the swept rule but involve overlapping parts or redundant operations. The GPU implementation particularly blurs this difference because it solves an extra block to avoid intra-node communication but no extra blocks are solved for inter-node communication. The swept rule also differs because it particularly focuses on solving PDEs. There are varying degrees of communication algorithms that tend to focus on linear algebra \cite{DemmelAvoidingComputations, Ballard2011MinimizingAlgebra,BaboulinAMachines,Khabou2012LUVersion,SolomonikAHoefler}. 
 
 The swept rule was originally developed by Alhubail et al.~\cite{Alhubail2016ThePDEs}, who presented a one-dimensional CPU-only swept PDE solver which was tested by solving the Kuramoto--Sivashinsky equation and the compressible Euler equations. 
-They concluded that in each case a number of integrations can be performed during the latency time of a communication. Their analysis showed that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. 
+They concluded that in each case a number of integrations can be performed during the \former{latency}{revTwo} time of a communication. Their analysis showed that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. 
 Alhubail et al.~\cite{Alhubail2018ThePDEs} followed this work with a two-dimensional CPU only swept PDE solver which reported speedups of up to three times compared to classical methods when solving the wave and Euler equations. 
 These studies differ from our study most prominently by the dimensionality and intended architecture.
 
@@ -245,11 +259,17 @@ This parameter is of interest because it directly impacts the performance of the
 
 In our implementation, the share does not account for the number of GPU or CPU cores available but simply divides the given input array based on the number of blocks in the $x$ direction, e.g., if the array contains $10$ blocks and $s=0.5$ then five blocks will be allocated as GPU work and the remainder as CPU work. These portions of work would then be divided amongst available resources of each type. 
 
-Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. Finally, array sizes were chosen as multiples of the largest block size; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
+Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. 
 
-The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge-Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
+Finally, array sizes were chosen as multiples of the largest block size \revised{used across all the tested sizes (32)}{revOne}; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
 
-Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware. The methods were tested separately with 32 processes. The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs. As a convention, parameters with respect to the first set of hardware will be referred to with a subscript $1$ and likewise a subscript $2$ for the second set. Each of these sets was used to solve both the heat diffusion equation and the compressible Euler equations. Section~\ref{results-section} present the performance data we collected. 
+The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge--Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
+\newpage
+Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware.
+\revised{Two hardware sets each containing two nodes were selected in total with each node using 16 CPU cores and one GPU during testing. These sets were tested separately with 32 processes spawned by MPI.}{revOne} 
+\former{The methods were tested separately with 32 processes.}{revOne}
+The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs.
+As a convention, parameters with respect to the first set of hardware will be referred to with a subscript 1 and likewise a subscript 2 for the second set. Each of these sets was used to solve both the heat diffusion equation and the compressible Euler equations. Section~\ref{results-section} present the performance data we collected. 
 
 The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to four nodes. Each node was given approximately two million spatial points and solved both problems for five hundred time steps. A share of 90\% and block size of 16 were used in this test. 
 
@@ -292,17 +312,17 @@ The \Oct{} always precedes the \Yb{}, Communicate, \Xb{} sequence. However, the 
     \label{fig:MainTwo}
 \end{figure}
 
-The final number of time steps taken by a swept simulation is determined by the number of \Oct{} phases ($2k$ time steps) that most accurately capture the specified number of time steps. This is a consequence of the swept rule: the exact number of steps is not always achievable in some cases because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. Between each calculation step, a communication step occurs that consists of shared memory data management and writing to disk.
+The final number of time steps taken by a swept simulation is determined by the number of \Oct{} phases ($2k$ time steps) that most accurately capture the specified number of time steps. This is a consequence of the swept rule: the exact number of steps is not always achievable in some cases because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. Between each calculation step, a communication step occurs that consists of shared memory data management and writing to disk. 
 
 The shared-memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting the data, which is a strategy implemented for handling boundary blocks in the array. \pysweep{} was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally form in the direction orthogonal to the boundary (e.g., during the \Oct{} phase on the boundary where $x=0$, only half the \Oct{} will be formed in the $x$ direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, we implemented a data shifting strategy that allows the majority of the same functions and kernels to be used. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of moving the data in memory. 
 
-\pysweep{} writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write its data to disk independently of other ranks \cite{Collette2008HDF5Python}. The size of the shared memory array is $2k$ spaces in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then moved down in the time dimension of the array so that the next phase can be calculated in the existing space.
+\pysweep{} writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write its data to disk independently of other ranks \cite{Collette2008HDF5Python}. The size of the shared memory array is $2k$ spaces in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then moved down in the time dimension of the array so that the next phase can be calculated in the existing space. \revised{Writing to disk was necessary during this step because some of the larger simulations required data that exceeded the available memory.}{revOne}
 
 The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions but can be modified to suit other conditions using the same strategy. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. In this condition, we found it suitable for this study.
 
 \section{Results}
 \label{results-section}
-
+%Array sizes [102400, 230400, 409600, 640000, 921600, 1254400]
 Here we present the results of applying \pysweep{} to the heat transfer and compressible flow problems introduced in section~\ref{methods-section}. When solving these problems, we varied the following parameters to assess performance: array size, block size, share, and hardware. Array sizes of [320, 480, 640, 800, 960, 1120] were used to make the total number of points span a couple orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. Along with these parameters, we advanced each problem 500 time steps.
 
 \subsection{Heat Diffusion Equation}
@@ -401,8 +421,6 @@ The \Standard{} solver shows better weak scalability in both cases. This suggest
     \label{fig:scalabilityEuler}
 \end{figure}
 
-
-
 \section{Discussion}
 \label{discussion-section}
 
@@ -412,6 +430,8 @@ For the Euler equations, we see an overall speedup range of 0.52--1.46 for the f
 These speedups are better aligned with values reported in other studies. 
 The two-dimensional CPU version reported a speedup of at most 4~\cite{Alhubail2018ThePDEs}, the one-dimensional GPU version reported 0.53--0.83~\cite{Magee2018AcceleratingDecomposition}, and the one-dimensional heterogeneous version reported 1.1--2.0 \cite{Magee2020ApplyingSystems}.
 
+Trends of
+
 It is consistent between studies that the swept rule performance declines as numerical complexity increases. We suspect that the magnitude of speedups differ noticeably because performance is partially implementation based. Regardless, the swept rule can be helpful or harmful to simulation performance but testing is required to in the process. It depends on the problem solved, desired numerical scheme, and implementation.  
 We see from the contours that the more complicated problem generally performs worse. In contrast, the heat equation shows quite a few areas of speed up for lower array sizes. 
 
@@ -419,7 +439,7 @@ The scalability results also help us to understand the swept rule's performance.
 Figure~\ref{fig:scalabilityHeat} and~\ref{fig:scalabilityEuler} shows that generally the swept algorithm scales worse for both problems. Worse scalability is likely caused by bandwidth dominating the simulation. 
 We suspect that the implementation of the communication step of the \Swept{} solver is responsible for this because it moves around more data than \Standard{}. 
 
-The decline in performance with increasing in array sizes and scalability also supports our suspicion.
+The decline in performance with increasing \former{in}{revTypo} array sizes and scalability also supports our suspicion.
 More data moves with larger array sizes, leading to higher bandwidth costs. In regards to scalability, notice how the \Swept{} scalability curve in Figure~\ref{fig:scalabilityEuler} is separated completely from the \Standard{} curve but this does not occur in Figure~\ref{fig:scalabilityHeat}. 
 The Euler equations have roughly four times the amount of data to communicate making it more expensive. 
 
@@ -447,9 +467,8 @@ We tested our implementation over a range of GPU work shares, block sizes, and a
 Our goal was to understand how the method performs based on these configurations.
 
 Swept rule performance depends on the problem and scheme when using heterogeneous architecture. 
-If possible, using solely GPUs provides the fastest run times for all cases we tested, and the swept rule can offer speedup in some of these pure-GPU cases. 
-If GPUs cannot solely be used, speedup can still be obtained with optimal tuning, which depends on the input parameters. 
-Generally, block sizes between 16--24 and a GPU share above 75\% are a good place to start.
+If possible, using solely GPUs provides the fastest run times for all cases we tested, and the swept rule can offer speedup in some of these pure-GPU cases. \revised{In the event that a simulation's size exceeds what a system's GPUs can handle solely,}{revOne}
+\former{If GPUs cannot solely be used,}{revOne} speedup can still be obtained with optimal tuning, which depends on the input parameters. Generally, block sizes between 16--24 and a GPU share above 75\% are a good place to start.
 
 Next, we found that hardware can affect swept-rule performance. 
 The swept rule does show differing performance characteristics between different hardware combinations, but the major trends hold. 
