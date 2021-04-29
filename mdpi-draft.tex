@@ -102,10 +102,10 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{The Two-Dimensional Swept Rule Applied on Heterogeneous Architectures}
+\Title{Applying the Swept Rule for Solving Two-Dimensional Partial differential equations on heterogeneous architectures}
 
 % MDPI internal command: Title for citation in the left column
-\TitleCitation{The Two-Dimensional Swept Rule Applied on Heterogeneous Architectures}
+\TitleCitation{Applying the swept rule for solving two-dimensional partial differential equations on heterogeneous architectures}
 
 % Author Orchid ID: enter ID or remove command
 \newcommand{\orcidauthorA}{0000-0002-0616-6998} % Add \orcidA{} behind the author's name
@@ -332,7 +332,7 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.9cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
+    \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
     \caption{Verification of heat diffusion equation.}
     \label{fig:heatSurface}
 \end{figure}
@@ -347,7 +347,7 @@ In these figures, a black dot with a white border represents the worst case and 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatNew.pdf}
+    \includegraphics[scale=0.9]{figs/speedUpheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupHeat}
 \end{figure}
@@ -358,7 +358,7 @@ The worst-performing cases lay close to the optimal cases: between 90--100\% sha
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpheatOld.pdf}
+    \includegraphics[scale=0.9]{figs/speedUpheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat} 
 \end{figure}
@@ -376,7 +376,7 @@ We performed the same tests here as in section~\ref{hdeResults}. Figures~\ref{fi
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.3cm 0.2cm 0.2cm},clip]{figs/eulerValidate.pdf}
+    \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/eulerValidate.pdf}
     \caption{Verification of compressible Euler equations.}
     \label{fig:eulerSurface}
 \end{figure}
@@ -386,7 +386,7 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerNew.pdf}
+    \includegraphics[scale=0.9]{figs/speedUpeulerNew.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupEuler}
 \end{figure}
@@ -396,7 +396,7 @@ Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.75cm 0.4cm 0.8cm 0.7cm},clip]{figs/speedUpeulerOld.pdf}
+    \includegraphics[scale=0.9]{figs/speedUpeulerOld.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupEuler}
 \end{figure}
@@ -409,14 +409,14 @@ The \Standard{} solver shows better weak scalability in both cases. This suggest
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0cm 0.75cm 1cm 1.25cm},clip]{figs/weakScalabilityHeat.pdf}
+    \includegraphics[scale=0.9]{figs/weakScalabilityHeat.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the heat equations.}
     \label{fig:scalabilityHeat}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0cm 0.75cm 1cm 1.25cm},clip]{figs/weakScalabilityEuler.pdf}
+    \includegraphics[scale=0.9]{figs/weakScalabilityEuler.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the Euler equations.}
     \label{fig:scalabilityEuler}
 \end{figure}
@@ -448,7 +448,7 @@ So, while this achieves savings in latency, performance takes a hit due to threa
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[height=9cm,width=0.78\textwidth, trim={0.5cm 0.4cm 0.5cm 0.2cm},clip]{figs/clockTimeSwepteulerOld.pdf}
+    \includegraphics[scale=0.9]{figs/clockTimeSwepteulerOld.pdf}
     \caption{Clock time results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:clocktimeOldEuler}
 \end{figure}
