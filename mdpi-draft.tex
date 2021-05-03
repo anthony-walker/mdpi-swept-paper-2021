@@ -3,7 +3,7 @@
 
 %=================================================================
 %\documentclass[journal,article,submit,moreauthors,pdftex]{Definitions/mdpi}
-\documentclass[preprints,article,accept,moreauthors,pdftex]{Definitions/mdpi} 
+\documentclass[mca,article,submit,moreauthors,pdftex]{Definitions/mdpi}
 
 % For posting an early version of this manuscript as a preprint, you may use "preprints" as the journal and change "submit" to "accept". The document class line would be, e.g., \documentclass[preprints,article,accept,moreauthors,pdftex]{mdpi}. This is especially recommended for submission to arXiv, where line numbers should be removed before posting. For preprints.org, the editorial staff will make this change immediately prior to posting.
 
@@ -179,7 +179,7 @@ The barrier is a bottleneck in the system that can limit the performance regardl
 
 Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of simultaneous calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or systems with multiple processor types---CPUs and GPUs, in this case \cite{owens2007survey,owens2008gpu}. Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs. Minimizing latency in high performance computing is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{Alexandrov2016RouteSkills}.
 
-This study presents our implementation and testing of a two-dimensional heterogeneous solver for unsteady partial differential equations that employs a technique to help overcome the latency barrier---the swept rule \cite{Alhubail2016ThePDEs}. In other words, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). In this article, we first discuss related work, distinguish our work from prior swept studies, and provide more motivation in section~\ref{related-section}. Next, we describe implementation details, objectives, study parameters, design decisions, methods, and tests in section~\ref{methods-section}. As expected, this is followed with results and conclusions in sections~\ref{results-section} and~\ref{conclusions-section}.
+This study presents our implementation and testing of a two-dimensional heterogeneous solver for unsteady partial differential equations that employs a technique to help overcome the latency barrier---the swept rule \cite{Alhubail2016ThePDEs}. In other words, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). In this article, we first discuss related work, distinguish our work from prior swept studies, and provide more motivation in Section~\ref{related-section}. Next, we describe implementation details, objectives, study parameters, design decisions, methods, and tests in Section~\ref{methods-section}. As expected, this is followed with results and conclusions in Sections~\ref{results-section} and~\ref{conclusions-section}.
 
 \section{Related Work}
 \label{related-section}
@@ -201,7 +201,7 @@ The effect of added dimensionality on performance is a pragmatic interest and ca
 
 In the event that computation time is not the primary concern, available resources or resource costs are important considerations. The ability to execute a simulation on a high performance computing system depends on access to such systems. 
 Pay-per-use systems like Amazon AWS, Microsoft Azure, and Google Cloud offer cloud computing time. However, pricing models for university-managed clusters remain ambiguous making determination of cost challenging on the user's end \cite{Mesnard2019}. 
-In the case of Amazon EC2, simulation time can be purchased at different hourly rates depending on the application. We generated an estimate using Amazon's pricing tool with a two node configuration (\texttt{g4dn.xlarge} instances) which yielded a monthly ``on-demand\\ cost of \$928.46 \cite{AmazonServices}. 
+In the case of Amazon EC2, simulation time can be purchased at different hourly rates depending on the application. We generated an estimate using Amazon's pricing tool with a two node configuration (\texttt{g4dn.xlarge} instances) which yielded a monthly ``on-demand'' cost of \$928.46 \cite{AmazonServices}. 
 Purchasing such time and configures quickly becomes expensive for applications that require large numbers of computing hours or larger hardware configurations. Network latency contributes substantially to this cost as it is aggrandized in applications requiring a lot of communication because each communication event takes a finite amount of time regardless of the data size. 
 
 Furthermore, it is possible to obtain and show performance benefits on smaller systems. This claim is supported by findings from Magee et al., who showed speedup on a workstation with a single GPU and CPU~\cite{Magee2018AcceleratingDecomposition}. 
@@ -250,9 +250,7 @@ This parameter is of interest because it directly impacts the performance of the
 
 In our implementation, the share does not account for the number of GPU or CPU cores available but simply divides the given input array based on the number of blocks in the $x$ direction, e.g., if the array contains $10$ blocks and $s=0.5$ then five blocks will be allocated as GPU work and the remainder as CPU work. These portions of work would then be divided amongst available resources of each type. 
 
-Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. 
-
-Finally, array sizes were chosen as multiples of the largest block size \revised{used across all the tested sizes (32)}{revOne}; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
+Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. Finally, array sizes were chosen as multiples of the largest block size \revised{used across all the tested sizes (32)}{revOne}; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
 
 The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge--Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
 \newpage
@@ -322,6 +320,7 @@ Here we present the results of applying \pysweep{} to the heat transfer and comp
 We solved the heat diffusion equation numerically using forward-Euler and a three-point central difference in space. We verified it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation described in Appendix~\ref{Heat-Diffusion}. Figure~\ref{fig:heatSurface} compares the temperature distribution of the numerical and analytical solutions over time. The temperature distribution is representative of a flat plate with a checkerboard pattern of hot and cold spots. We see these spots diffuse out over time and approach a steady intermediate temperature which is expected. We also see that the numerical solution matches the analytical solution which verifies that we are solving the problem correctly.
 
 \newpage
+
 \end{paracol}
 \nointerlineskip
 
@@ -331,40 +330,53 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
     \caption{Verification of heat diffusion equation.}
     \label{fig:heatSurface}
 \end{figure}
-
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
-
 
 Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
 \begin{equation}
     S = \frac{R_{\textit{standard}}}{R_{\textit{swept}}} \;,
 \end{equation}
 where $R_i$ is the run time of simulation $i$.
-Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} show the performance results produced from our tests for the two sets of hardware described in section~\ref{parameters-section}. 
+Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} show the performance results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. 
 In these figures, a black dot with a white border represents the worst case and a white dot with a black border represents the best case.
 
-\begin{figure}[htbp]
-    \centering
+%\newpage
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+    \widefigure
     \includegraphics[scale=0.9]{figs/speedUpheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupHeat}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.71. 
 It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. 
-The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12-20.
+The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20.
 
-\begin{figure}[htbp]
-    \centering
+%\newpage
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+    \widefigure
     \includegraphics[scale=0.9]{figs/speedUpheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat} 
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
-
-In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.79-1.32. 
+In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.79--1.32. 
 Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. 
 The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit.
 
@@ -372,54 +384,79 @@ The worst case for a given array size tends to occur between 80--100\% share and
 \label{eulerVortexResults}
 
 We solved the Euler equations using a second-order Runge--Kutta scheme in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex described in Appendix~\ref{Compressible-Euler}. 
-We performed the same tests here as in section~\ref{hdeResults}. Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$. This specific angle comes from the imposed velocity field. We also see that the solutions match.
+We performed the same tests here as in Section~\ref{hdeResults}. Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$. This specific angle comes from the imposed velocity field. We also see that the solutions match.
 
-\begin{figure}[htbp]
-    \centering
+\newpage
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+\widefigure
     \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/eulerValidate.pdf}
     \caption{Verification of compressible Euler equations.}
     \label{fig:eulerSurface}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
-Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently performs slower than \Standard{} with a range of 0.52-1.46. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The best case for a given array size tends to occur above approximately 90\% share but there is no clear block size trend. The worst case for a given array size tends to occur at 100\% share but likewise a block size trend is unclear. However, in the three largest array sizes they always occur at 100\% share with a block size of 8.
+Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently performs slower than \Standard{} with a range of 0.52--1.46. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The best case for a given array size tends to occur above approximately 90\% share but there is no clear block size trend. The worst case for a given array size tends to occur at 100\% share but likewise a block size trend is unclear. However, in the three largest array sizes they always occur at 100\% share with a block size of 8.
 
+\end{paracol}
+\nointerlineskip
 
-\begin{figure}[htbp]
-    \centering
+\begin{figure}[H]
+\widefigure
     \includegraphics[scale=0.9]{figs/speedUpeulerNew.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
-Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36-1.42. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12-24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
+Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.42. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
 
+\end{paracol}
+\nointerlineskip
 
-\begin{figure}[htbp]
-    \centering
+\begin{figure}[H]
+    \widefigure
     \includegraphics[scale=0.9]{figs/speedUpeulerOld.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
-
-\subsection{Weak scalability}
+\subsection{Weak Scalability}
 
 These results raised some questions about the performance, e.g., why the swept rule performance decreases with increasing array size. We considered the weak scalability of the algorithms to explore this. Figures~\ref{fig:scalabilityHeat} and~\ref{fig:scalabilityEuler} show the time per timestep of each solver for the two problems. 
 The \Standard{} solver shows better weak scalability in both cases. This suggests that something other than latency dominates the simulations so latency improvements are less noticeable.
 
-\begin{figure}[htbp]
-    \centering
+\newpage
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+\widefigure
     \includegraphics[scale=0.9]{figs/weakScalabilityHeat.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the heat equations.}
     \label{fig:scalabilityHeat}
 \end{figure}
 
-\begin{figure}[htbp]
-    \centering
+\begin{figure}[H]
+    \widefigure
     \includegraphics[scale=0.9]{figs/weakScalabilityEuler.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the Euler equations.}
     \label{fig:scalabilityEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 \section{Discussion}
 \label{discussion-section}
@@ -434,7 +471,7 @@ It is consistent between studies that the swept rule performance declines as num
 We see from the contours that the more complicated problem generally performs worse. In contrast, the heat equation shows quite a few areas of speed up for lower array sizes. 
 
 The scalability results also help us to understand the swept rule's performance.
-Figure~\ref{fig:scalabilityHeat} and~\ref{fig:scalabilityEuler} shows that generally the swept algorithm scales worse for both problems. Worse scalability is likely caused by bandwidth dominating the simulation. 
+Figures~\ref{fig:scalabilityHeat} and~\ref{fig:scalabilityEuler} shows that generally the swept algorithm scales worse for both problems. Worse scalability is likely caused by bandwidth dominating the simulation. 
 We suspect that the implementation of the communication step of the \Swept{} solver is responsible for this because it moves around more data than \Standard{}. 
 
 The decline in performance with increasing \former{in}{revTypo} array sizes and scalability also supports our suspicion.
@@ -446,12 +483,18 @@ Other causes of poor performance could be steps that the \Swept{} solver takes b
 Scalability and array size aside, performance is also tied to the block size. The best case frequently occurs between intermediate block sizes because these cases balance thread divergence and latency improvements. The GPU portion naively removes points with conditional statements which causes some threads to diverge. 
 So, while this achieves savings in latency, performance takes a hit due to thread divergence on GPUs.
 
-\begin{figure}[htbp]
-    \centering
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+\widefigure
     \includegraphics[scale=0.9]{figs/clockTimeSwepteulerOld.pdf}
     \caption{Clock time results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:clocktimeOldEuler}
 \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 The fastest option is typically the most desired outcome when it comes to high performance computing applications. While in some cases a GPU share of less than 100\% yield faster results, this is not one of those cases. Figure~\ref{fig:clocktimeOldEuler} demonstrates that the clock time only increases as share decreases. Note, figures for clock time in other cases were not presented because they show the same result: 100\% leads to the lowest clock time. 
 However, the optimal configuration is useful if simulation requires data greater than the limit of the GPU(s).
@@ -492,7 +535,7 @@ and in some cases speedup at all over a traditional decomposition.
 
 \funding{This material is based upon work supported by NASA under award No. NNX15AU66A under the technical monitoring of Drs. Eric Nielsen and Mujeeb Malik.}
 
-\dataavailability{All code to reproduce the data can be found at \github{}}.
+\dataavailability{All code to reproduce the data can be found at \github{}.}
 
 \acknowledgments{We gratefully acknowledge the support of NVIDIA Corporation, who donated a Tesla K40c GPU used in developing this research.}
 
@@ -547,8 +590,9 @@ The initial conditions are then
 \end{align*}
 where Table~\ref{tab:eulerVortex} shows the specific values used.
 
-\begin{table}[htb]
-    \centering
+\begin{specialtable}[H]
+    \caption{Conditions used in analytical solution \cite{shu1998essentially}.}
+    \label{tab:eulerVortex}
     \begin{tabular}{@{}ccccccccc@{}}
     \toprule
     $\alpha$ & $M_\infty$  & $\rho_\infty$ & $p_\infty$ & $T_\infty$ & $R$ & $\sigma$ & $\beta$ & $L$ \\ 
@@ -556,9 +600,7 @@ where Table~\ref{tab:eulerVortex} shows the specific values used.
     $45^\circ$ &  $\sqrt{\frac{2}{\gamma}}$ & $1$ & $1$ & $1$ & $1$ & $1$ & $M_\infty \frac{5\sqrt{2}}{4\pi}e^{1/2}$ & $5$\\
     \bottomrule
     \end{tabular}
-    \caption{Conditions used in analytical solution \cite{shu1998essentially}}
-    \label{tab:eulerVortex}
-\end{table}
+\end{specialtable}
 
 Similar to the heat diffusion equation, periodic boundary conditions were implemented. 
 We implemented a similar numerical scheme to that of Magee et al.~\cite{Magee2018AcceleratingDecomposition}, except extended it into two dimensions. 
