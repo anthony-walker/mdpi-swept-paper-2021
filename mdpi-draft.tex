@@ -265,6 +265,20 @@ The results of this study raised some questions about the scalability of the alg
 \subsection{Swept Solution Process}
 \label{swept-process-section}
 
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+    \widefigure
+    \includegraphics[scale=0.6]{figs/swept-process.pdf}
+    \caption{High level view of the swept solution process.}
+    \label{fig:SweptProcess}
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
 To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. The algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. This process becomes more convoluted as we dive deeper into the details. To aid understanding, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase. 
 
 We considered communication to be when the code was transferring data to other ranks. Node-based rank communication between the CPU and GPUs happens via the use of shared memory, a capability implemented in MPICH-3 or later \cite{Hoefler2013MPIMemory}. Inter-node communication was performed with typical MPI constructs such as send and receive. A shared GPU memory approach implemented by Magee et al. showed some benefit \cite{Magee2018AcceleratingDecomposition}; this concept led to the idea of using shared memory on each node for node communication and primary processes for inter-node communication.
@@ -279,12 +293,20 @@ The first phase of calculation is the \Up{} shown in Figure~\ref{fig:MainOne} (t
 
 The next phase in the process is referred to as the Bridge which occurs independently in each dimension. The solution procedure for the bridges on the CPU and GPU follows the same paradigm as the \Up{} but twice as many bridges are formed because there is one in each direction. Bridges formed in each direction are labeled as such, e.g., the Bridge that forms parallel to the $y$ axis as time progresses is referred to as the \Yb{}. The initial boundaries of each Bridge were determined from $n$ and $b$. The Bridges grew by $2n$ from these initial boundaries in their reference dimensions and shrank by $2n$ in the other dimension which allowed the appropriate calculation points to be determined conditionally or prior to calculation.
 
+\newpage
+\end{paracol}
+\nointerlineskip
+
 \begin{figure}[H]
-    \centering
+    \widefigure
     \includegraphics{figs/SubsPlot1.pdf}
     \caption{The first four steps in the swept solution process: \Up{} (top left), \Yb{} (top right), \texttt{Communication} (bottom left), and \Xb{} (bottom right).}
     \label{fig:MainOne}
 \end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 Depending on the decomposition strategy, a large portion of the Bridges can occur prior to inter-node communication. In this implementation, the \Yb{}---shown in Figure \ref{fig:MainOne} (top right)---occurs prior to the first communication. The first inter-node communication then follows by shifting nodal data $b/2$ points in the positive $x$ direction. Any data that exceeds the boundaries of its respective shared array is communicated to the appropriate adjacent node. This process is demonstrated in Figure~\ref{fig:MainOne} (bottom left). The shift in data allows previously determined sets and blocks to be used in the upcoming calculation phases so the \Xb{} proceeds directly after the communication as shown in Figure~\ref{fig:MainOne} (bottom right).
 
@@ -293,13 +315,19 @@ The first three phases in the swept solution process demonstrated in Figure~\ref
 The \Oct{} always precedes the \Yb{}, Communicate, \Xb{} sequence. However, the communication varies in direction as the shift and communication of data is always the opposite of the former communication. We repeated this series of events as many times as was necessary to reach the final desired time of each simulation. The final phase is the aforementioned \Down{} which occurs only once at the end of the simulation. We show the ending sequence---minus the communication---in its entirety in Figure~\ref{fig:MainTwo}. 
 
 % Octahedron
+\end{paracol}
+\nointerlineskip
 
 \begin{figure}[H]
-    \centering
+    \widefigure
     \includegraphics{figs/SubsPlot2.pdf}
     \caption{The intermediate and final steps of the swept solution: \Oct{} (top left), \Xb{} (top right), \Yb (bottom left), and \Down{} (bottom right).}
     \label{fig:MainTwo}
 \end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
 The final number of time steps taken by a swept simulation is determined by the number of \Oct{} phases ($2k$ time steps) that most accurately capture the specified number of time steps. This is a consequence of the swept rule: the exact number of steps is not always achievable in some cases because the simulation only stops after the completion of a phase. These phases occur on both the GPU and CPU with respect to the given share. Between each calculation step, a communication step occurs that consists of shared memory data management and writing to disk. 
 
