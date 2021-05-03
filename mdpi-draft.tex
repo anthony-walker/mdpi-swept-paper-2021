@@ -264,22 +264,39 @@ The results of this study raised some questions about the scalability of the alg
 
 \subsection{Swept Solution Process}
 \label{swept-process-section}
+\former{To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. The algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. This process becomes more convoluted as we dive deeper into the details. To aid understanding, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase. }{revOne}
+
+\revised{To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. High level solution processes for the \Swept{} solver and \Standard{} solver are shown in  Figures~\ref{fig:SweptProcess} and~\ref{fig:StandProcess}.In Figure~\ref{fig:SweptProcess}, the swept process starts with preprocessing where each node is given instructions about what it is solving. Each node then initially solves as much as it can of several time steps. A communication between nodes then allows the nodes to solve the remainder of those time steps. This process repeats until the desired time step is achieved.}{revOne} 
 
 \end{paracol}
 \nointerlineskip
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.6]{figs/swept-process.pdf}
+    \includegraphics[scale=0.85]{figs/swept-process.pdf}
     \caption{High level view of the swept solution process.}
     \label{fig:SweptProcess}
+\end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+The standard process in Figure~\ref{fig:StandProcess} demonstrates the traditional way of solving these problems. Similarly, the standard process starts with any preprocessing that is necessary. It proceeds to solve a single time step and then communicate. The standard process repeats this until the desired timestep is achieved. Notice in this example with three timesteps, the standard process communicates twice and the swept process communicates ones. Reducing these communication events is the core idea behind the swept rule.
+
+\end{paracol}
+\nointerlineskip
+\begin{figure}[H]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/standard-process.pdf}
+    \caption{High level view of the standard solution process.}
+    \label{fig:StandProcess}
 \end{figure}
 
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
 
-To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. The algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. This process becomes more convoluted as we dive deeper into the details. To aid understanding, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase. 
+\revised{More specifcally, the swept algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. This process becomes more convoluted as we dive deeper into the details. To aid understanding, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase.}{revOne}
 
 We considered communication to be when the code was transferring data to other ranks. Node-based rank communication between the CPU and GPUs happens via the use of shared memory, a capability implemented in MPICH-3 or later \cite{Hoefler2013MPIMemory}. Inter-node communication was performed with typical MPI constructs such as send and receive. A shared GPU memory approach implemented by Magee et al. showed some benefit \cite{Magee2018AcceleratingDecomposition}; this concept led to the idea of using shared memory on each node for node communication and primary processes for inter-node communication.
  
