@@ -133,7 +133,7 @@ School of Mechanical, Industrial, and Manufacturing Engineering, Oregon State Un
 % Abstract (Do not insert blank lines, i.e. \\) 
 \abstract{The partial differential equations describing compressible fluid flows can be notoriously difficult to resolve on a pragmatic scale and often require the use of high performance computing systems and/or accelerators. 
 However, these systems face scaling issues such as latency, the fixed cost of communicating information between devices in the system. The swept rule is a technique designed to minimize these costs by obtaining a solution to unsteady equations at as many possible spatial locations and times prior to communicating. 
-In this study, we implemented and tested the swept rule for solving two-dimensional problems on heterogeneous computing systems across two distinct systems \textcolor{revOne}{and three key parameters: array size, block size, and share.} Our solver showed a speedup range of 0.22--2.71 for the heat diffusion equation and 0.52--1.46 for the compressible Euler equations. 
+In this study, we implemented and tested the swept rule for solving two-dimensional problems on heterogeneous computing systems across two distinct systems \textcolor{revOne}{and three key parameters: array size, block size, and share.} Our solver showed a speedup range of 0.22--2.69 for the heat diffusion equation and 0.52--1.46 for the compressible Euler equations. 
 We can conclude from this study that the swept rule offers both potential for speedups and slowdowns and that care should be taken when designing such a solver to maximize benefits. These results can help make decisions to maximize these benefits and inform designs.}
 
 % Keywords
@@ -378,12 +378,16 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
-
-Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
+\former{Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
 \begin{equation}
     S = \frac{R_{\textit{standard}}}{R_{\textit{swept}}} \;,
 \end{equation}
-where $R_i$ is the run time of simulation $i$.
+where $R_i$ is the run time of simulation $i$.}{revTwo}
+\revised{Our performance metrics of choice for the swept rule were speedup, $S$, and time per timestep, $T$, as a function of array size, block size, and share:
+\begin{equation}
+    S = \frac{T_{\textit{standard}}}{T_{\textit{swept}}} \;,
+\end{equation}
+where $T_i$ is with respect to simulation type $i$.}{revTwo}
 Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} show the performance results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. 
 In these figures, a black dot with a white border represents the worst case and a white dot with a black border represents the best case.
 
@@ -394,7 +398,7 @@ In these figures, a black dot with a white border represents the worst case and 
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.85]{figs/speedUpheatNew.pdf}
+    \includegraphics[scale=0.85]{figs/SpeedupTPTheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupHeat}
 \end{figure}
@@ -402,7 +406,7 @@ In these figures, a black dot with a white border represents the worst case and 
 \linenumbers
 \switchcolumn
 
-Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.71. 
+Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.69. 
 It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. 
 The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20.
 
@@ -413,7 +417,7 @@ The worst-performing cases lay close to the optimal cases: between 90--100\% sha
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.85]{figs/speedUpheatOld.pdf}
+    \includegraphics[scale=0.85]{figs/SpeedupTPTheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat} 
 \end{figure}
@@ -421,7 +425,7 @@ The worst-performing cases lay close to the optimal cases: between 90--100\% sha
 \linenumbers
 \switchcolumn
 
-In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.79--1.32. 
+In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. 
 Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. 
 The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit.
 
@@ -461,7 +465,7 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 \linenumbers
 \switchcolumn
 
-Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.42. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
+Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.41. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
 
 \end{paracol}
 \nointerlineskip
@@ -506,9 +510,9 @@ The \Standard{} solver shows better weak scalability in both cases. This suggest
 \section{Discussion}
 \label{discussion-section}
 
-In regards to the heat diffusion equation, we see an overall range of speedup from 0.22--2.71 for the first hardware set and 0.79--1.32 for the second. However, the limits of speedup are outliers. These speedups are lower in comparison to the one-dimensional heterogeneous version which reported 1.9 to 23 times speedup \cite{Magee2020ApplyingSystems} and, the one-dimensional GPU version which reported 2 to 9 times speedup for similar applications \cite{Magee2018AcceleratingDecomposition}. 
+In regards to the heat diffusion equation, we see an overall range of speedup from 0.22--2.69 for the first hardware set and 0.78--1.31 for the second. However, the limits of speedup are outliers. These speedups are lower in comparison to the one-dimensional heterogeneous version which reported 1.9 to 23 times speedup \cite{Magee2020ApplyingSystems} and, the one-dimensional GPU version which reported 2 to 9 times speedup for similar applications \cite{Magee2018AcceleratingDecomposition}. 
 
-For the Euler equations, we see an overall speedup range of 0.52--1.46 for the first set of hardware and 0.36--1.42 for the second. 
+For the Euler equations, we see an overall speedup range of 0.52--1.46 for the first set of hardware and 0.36--1.41 for the second. 
 These speedups are better aligned with values reported in other studies. 
 The two-dimensional CPU version reported a speedup of at most 4~\cite{Alhubail2018ThePDEs}, the one-dimensional GPU version reported 0.53--0.83~\cite{Magee2018AcceleratingDecomposition}, and the one-dimensional heterogeneous version reported 1.1--2.0 \cite{Magee2020ApplyingSystems}.
 
