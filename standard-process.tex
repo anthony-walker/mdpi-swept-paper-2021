@@ -1,0 +1,46 @@
+\documentclass[tikz,margin=5mm]{standalone}
+
+% Flow chart packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\newcommand{\radlen}{3cm}
+\newcommand{\xfactor}{1.25}
+\newcommand{\yfactor}{-1.5}
+\begin{document}
+
+ %Style of flow chart
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=\radlen, minimum height=\radlen,text centered, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, minimum width=\radlen, minimum height=1cm, text centered, draw=black, fill=green!10]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+\tikzstyle{computenode} = [circle, minimum width=\radlen,text centered, draw=black, fill=red!10]
+
+\begin{tikzpicture}[node distance=2.5cm]
+
+    \node (stdstart) [startstop,yshift=2.5*\yfactor*\radlen ,align=center] {Standard\\preprocessing};
+    \node (stn1) [computenode,yshift=2*\yfactor*\radlen ,xshift=\xfactor*\radlen ,align=center] {Node 1: \\solving timestep \\$n$};
+    \node (stn2) [computenode,yshift=3*\yfactor*\radlen ,xshift=\xfactor*\radlen , align=center] {Node 2: \\solving timestep \\$n$};
+    \node (stdcomm1) [decision,yshift=2.5*\yfactor*\radlen,xshift=2*\xfactor*\radlen ,align=center]{communicate\\timestep \\$n$};
+    \node (stn3) [computenode,yshift=2*\yfactor*\radlen ,xshift=3*\xfactor*\radlen ,align=center] {Node 1: \\solving timestep \\$n+1$};
+    \node (stn4) [computenode,yshift=3*\yfactor*\radlen ,xshift=3*\xfactor*\radlen , align=center] {Node 2: \\solving timestep \\$n+1$};
+    \node (stdcomm2) [decision,yshift=2.5*\yfactor*\radlen,xshift=4*\xfactor*\radlen ,align=center]{communicate\\timestep \\$n+1$};
+    \node (stn5) [computenode,yshift=2*\yfactor*\radlen ,xshift=5*\xfactor*\radlen ,align=center] {Node 1: \\solving timestep \\$n+2$};
+    \node (stn6) [computenode,yshift=3*\yfactor*\radlen ,xshift=5*\xfactor*\radlen , align=center] {Node 2: \\solving timestep \\$n+2$};
+    \node (stdend) [startstop,xshift=6*\xfactor*\radlen ,yshift=2.5*\yfactor*\radlen ,align=center] {Standard \\ postprocessing};
+    
+    \draw [arrow] (stdstart) -- (stn1);
+    \draw [arrow] (stdstart) -- (stn2);
+    \draw [arrow] (stn1) -- (stdcomm1);
+    \draw [arrow] (stn2) -- (stdcomm1);
+    \draw [arrow] (stdcomm1) -- (stn3);
+    \draw [arrow] (stdcomm1) -- (stn4);
+    \draw [arrow] (stn3) -- (stdcomm2);
+    \draw [arrow] (stn4) -- (stdcomm2);
+    \draw [arrow] (stdcomm2) -- (stn5);
+    \draw [arrow] (stdcomm2) -- (stn6);
+    \draw [arrow] (stn5) -- (stdend);
+    \draw [arrow] (stn6) -- (stdend);
+
+\end{tikzpicture}
+
+
+\end{document}

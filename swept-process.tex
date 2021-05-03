@@ -1,0 +1,57 @@
+\documentclass[tikz,margin=5mm]{standalone}
+
+% Flow chart packages
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\newcommand{\radlen}{3cm}
+\newcommand{\xfactor}{1.25}
+\newcommand{\yfactor}{-1.5}
+\begin{document}
+
+ %Style of flow chart
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=\radlen, minimum height=\radlen,text centered, draw=black, fill=blue!10]
+\tikzstyle{decision} = [diamond, minimum width=\radlen, minimum height=1cm, text centered, draw=black, fill=green!10]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+\tikzstyle{computenode} = [circle, minimum width=\radlen,text centered, draw=black, fill=red!10]
+
+\begin{tikzpicture}[node distance=2.5cm]
+    % \node (sweptstart) [process] {Start}
+    \node (sweptstart) [startstop,yshift=0.5*\yfactor*\radlen ,align=center] {Swept\\preprocessing};
+    \node (swn1) [computenode,xshift=\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n$};
+    \node (swn2) [computenode,xshift=\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n$};
+    \node (swn3) [computenode,xshift=2*\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n+1$};
+    \node (swn4) [computenode,xshift=2*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n+1$};
+    \node (swn5) [computenode,xshift=3*\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n+2$};
+    \node (swn6) [computenode,xshift=3*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n+2$};
+    \node (sweptcomm) [decision,xshift=4*\xfactor*\radlen , yshift=0.5*\yfactor*\radlen ,align=center]{communicate\\timesteps \\$n$ to $n+2$};
+    
+    \node (swn7) [computenode,xshift=5*\xfactor*\radlen,align=center] {Node 1: \\ solving part \\of remainder \\$n$};
+    \node (swn8) [computenode,xshift=5*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n$};
+    \node (swn9) [computenode,xshift=6*\xfactor*\radlen ,align=center] {Node 1: \\ solving part \\of remainder \\$n+1$};
+    \node (swn10) [computenode,xshift=6*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n+1$};
+    \node (swn11) [computenode,xshift=7*\xfactor*\radlen ,align=center] {Node 1: \\ solving part \\of remainder \\$n+2$};
+    \node (swn12) [computenode,xshift=7*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n+1$};
+    \node (sweptend) [startstop,xshift=8*\xfactor*\radlen ,yshift=0.5*\yfactor*\radlen ,align=center] {Swept \\ postprocessing};
+    
+
+    \draw [arrow] (sweptstart) -- (swn1);
+    \draw [arrow] (sweptstart) -- (swn2);
+    \draw [arrow] (swn1) -- (swn3);
+    \draw [arrow] (swn2) -- (swn4);
+    \draw [arrow] (swn3) -- (swn5);
+    \draw [arrow] (swn4) -- (swn6);
+    \draw [arrow] (swn5) -- (sweptcomm);
+    \draw [arrow] (swn6) -- (sweptcomm);
+    \draw [arrow] (sweptcomm) -- (swn7);
+    \draw [arrow] (sweptcomm) -- (swn8);
+    \draw [arrow] (swn7) -- (swn9);
+    \draw [arrow] (swn8) -- (swn10);
+    \draw [arrow] (swn9) -- (swn11);
+    \draw [arrow] (swn10) -- (swn12);
+    \draw [arrow] (swn12) -- (sweptend);
+    \draw [arrow] (swn11) -- (sweptend);
+
+\end{tikzpicture}
+
+
+\end{document}
