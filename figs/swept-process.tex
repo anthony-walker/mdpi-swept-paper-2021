@@ -3,7 +3,7 @@
 % Flow chart packages
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows}
-\newcommand{\radlen}{3cm}
+\newcommand{\radlen}{2cm}
 \newcommand{\xfactor}{1.25}
 \newcommand{\yfactor}{-1.5}
 \begin{document}
@@ -16,22 +16,22 @@
 
 \begin{tikzpicture}[node distance=2.5cm]
     % \node (sweptstart) [process] {Start}
-    \node (sweptstart) [startstop,yshift=0.5*\yfactor*\radlen ,align=center] {Swept\\preprocessing};
-    \node (swn1) [computenode,xshift=\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n$};
-    \node (swn2) [computenode,xshift=\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n$};
-    \node (swn3) [computenode,xshift=2*\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n+1$};
-    \node (swn4) [computenode,xshift=2*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n+1$};
-    \node (swn5) [computenode,xshift=3*\xfactor*\radlen ,align=center] {Node 1: \\solving part \\of timestep \\$n+2$};
-    \node (swn6) [computenode,xshift=3*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of timestep \\$n+2$};
-    \node (sweptcomm) [decision,xshift=4*\xfactor*\radlen , yshift=0.5*\yfactor*\radlen ,align=center]{communicate\\timesteps \\$n$ to $n+2$};
+    \node (sweptstart) [startstop,yshift=0.5*\yfactor*\radlen ,align=center] {Swept\\preproc.};
+    \node (swn1) [computenode,xshift=\xfactor*\radlen ,align=center] {Node 1: \\initial \\$t_{0}$};
+    \node (swn2) [computenode,xshift=\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\initial \\$t_{0}$};
+    \node (swn3) [computenode,xshift=2*\xfactor*\radlen ,align=center] {Node 1: \\initial \\$t_{1}$};
+    \node (swn4) [computenode,xshift=2*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\initial \\$t_{1}$};
+    \node (swn5) [computenode,xshift=3*\xfactor*\radlen ,align=center] {Node 1: \\initial \\$t_{2}$};
+    \node (swn6) [computenode,xshift=3*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\initial \\$t_{2}$};
+    \node (sweptcomm) [decision,xshift=4*\xfactor*\radlen , yshift=0.5*\yfactor*\radlen ,align=center]{comm.\\ $t_{0}$ to $t_{2}$};
     
-    \node (swn7) [computenode,xshift=5*\xfactor*\radlen,align=center] {Node 1: \\ solving part \\of remainder \\$n$};
-    \node (swn8) [computenode,xshift=5*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n$};
-    \node (swn9) [computenode,xshift=6*\xfactor*\radlen ,align=center] {Node 1: \\ solving part \\of remainder \\$n+1$};
-    \node (swn10) [computenode,xshift=6*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n+1$};
-    \node (swn11) [computenode,xshift=7*\xfactor*\radlen ,align=center] {Node 1: \\ solving part \\of remainder \\$n+2$};
-    \node (swn12) [computenode,xshift=7*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\solving part \\of remainder\\ $n+1$};
-    \node (sweptend) [startstop,xshift=8*\xfactor*\radlen ,yshift=0.5*\yfactor*\radlen ,align=center] {Swept \\ postprocessing};
+    \node (swn7) [computenode,xshift=5*\xfactor*\radlen,align=center] {Node 1: \\ remainder \\$t_{0}$};
+    \node (swn8) [computenode,xshift=5*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\ remainder \\$t_{0}$};
+    \node (swn9) [computenode,xshift=6*\xfactor*\radlen ,align=center] {Node 1: \\ remainder \\$t_{1}$};
+    \node (swn10) [computenode,xshift=6*\xfactor*\radlen ,yshift=\yfactor*\radlen ,align=center] {Node 2: \\ remainder \\$t_{1}$};
+    \node (swn11) [computenode,xshift=7*\xfactor*\radlen ,align=center] {Node 1: \\ remainder \\$t_{2}$};
+    \node (swn12) [computenode,xshift=7*\xfactor*\radlen,yshift=\yfactor*\radlen ,align=center] {Node 2: \\ remainder \\$t_{2}$};
+    \node (sweptend) [startstop,xshift=8*\xfactor*\radlen ,yshift=0.5*\yfactor*\radlen ,align=center] {Swept \\ postproc.};
     
 
     \draw [arrow] (sweptstart) -- (swn1);
