@@ -60,7 +60,7 @@
 
 %=================================================================
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, changepage, paracol, attrib, upgreek, cleveref, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
-
+% \usepackage[subpreambles=true]{standalone}
 \usepackage{amsmath}
 \usepackage{xcolor}
 \usepackage[xcolor]{changebar}
@@ -253,7 +253,7 @@ In our implementation, the share does not account for the number of GPU or CPU c
 Array size is another parameter of interest because it demonstrates how performance scales with problem size. We restricted array size to be evenly divisible by the block size for ease of decomposition. Square arrays were also only considered so array size is represented by a single number of points in the $x$ and $y$ directions. Finally, array sizes were chosen as multiples of the largest block size \revised{used across all the tested sizes (32)}{revOne}; this can result in unemployed processes if there are not enough blocks. Potential for unemployed processes is, however, consistent across solvers and still provides a valuable comparison.
 
 The numerical scheme used to solve a problem directly affects the performance of the swept rule as it limits the number of steps that can be taken in time before communication. As such, the aforementioned parameters were applied to solving the unsteady heat diffusion equation and the unsteady compressible Euler equations as was done in prior swept-rule studies \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition, Magee2020ApplyingSystems}. The heat diffusion equation was applied to a temperature distribution on a flat plate and solved using the forward-Euler method in time and a three point finite difference in each spatial direction. The compressible Euler equations were applied to the isentropic Euler vortex problem and solved using a second-order Runge--Kutta in time and a five-point finite volume method in each spatial direction with a minmod flux limiter and Roe-approximate Riemann solver \cite{SpiegelAMethods,Leveque2002FiniteProblems}. Appendices~\ref{Heat-Diffusion} and~\ref{Compressible-Euler} provide further detail on these methods and associated problems.
-\newpage
+
 Hardware was selected based on the available resources at Oregon State University to analyze performance differences of the swept rule based on differing hardware.
 \revised{Two hardware sets each containing two nodes were selected in total with each node using 16 CPU cores and one GPU during testing. These sets were tested separately with 32 processes spawned by MPI.}{revOne} 
 \former{The methods were tested separately with 32 processes.}{revOne}
@@ -305,7 +305,7 @@ The final number of time steps taken by a swept simulation is determined by the 
 
 The shared-memory data management of the communication step as well as the writing to disk involve a couple of nuances worth mentioning. It includes shifting the data, which is a strategy implemented for handling boundary blocks in the array. \pysweep{} was implemented with periodic boundary conditions based on the targeted test problems. The boundary blocks of the array form half of the shape it would normally form in the direction orthogonal to the boundary (e.g., during the \Oct{} phase on the boundary where $x=0$, only half the \Oct{} will be formed in the $x$ direction). As expected, the corner will form a fourth of the respective shape. In lieu of added logic for handling these varying shapes, we implemented a data shifting strategy that allows the majority of the same functions and kernels to be used. The boundary points are able to be solved as if they were in the center of a block with this strategy. This strategy comes at the expense of moving the data in memory. 
 
-\pysweep{} writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write its data to disk independently of other ranks \cite{Collette2008HDF5Python}. The size of the shared memory array is $2k$ spaces in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then moved down in the time dimension of the array so that the next phase can be calculated in the existing space. \revised{Writing to disk was necessary during this step because some of the larger simulations required data that exceeded the available memory.}{revOne}
+\pysweep{} writes to disk during every communication as it is the ideal time. The code uses parallel HDF5 (h5py) so that each rank can write its data to disk independently of other ranks \cite{Collette2008HDF5Python}. The size of the shared memory array is $2k$ spaces in time plus the number of intermediate steps of the time scheme so that the intermediate steps of the scheme may be used for future steps if necessary. The appropriate fully solved steps are written to disk. The data is then moved down in the time dimension of the array so that the next phase can be calculated in the existing space. \revised{Writing to disk was necessary during this step because some of the larger simulations required data that exceeded the available memory. It is expensive to frequently write to disk so it is not an optimal choice, but it is consistent between solvers.}{revOne}
 
 The solver has a few restrictions based on architecture and implementation which have been previously described. It is currently implemented for periodic boundary conditions but can be modified to suit other conditions using the same strategy. The solver is also capable of handling given CPU functions and GPU kernels so that it may be used for any desired application that falls within the guidelines presented here. In this condition, we found it suitable for this study.
 
@@ -326,7 +326,7 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
+    \includegraphics[scale=0.85,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
     \caption{Verification of heat diffusion equation.}
     \label{fig:heatSurface}
 \end{figure}
@@ -349,7 +349,7 @@ In these figures, a black dot with a white border represents the worst case and 
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.9]{figs/speedUpheatNew.pdf}
+    \includegraphics[scale=0.85]{figs/speedUpheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupHeat}
 \end{figure}
@@ -368,7 +368,7 @@ The worst-performing cases lay close to the optimal cases: between 90--100\% sha
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.9]{figs/speedUpheatOld.pdf}
+    \includegraphics[scale=0.85]{figs/speedUpheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat} 
 \end{figure}
@@ -393,7 +393,7 @@ We performed the same tests here as in Section~\ref{hdeResults}. Figures~\ref{fi
 
 \begin{figure}[H]
 \widefigure
-    \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/eulerValidate.pdf}
+    \includegraphics[scale=0.85,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/eulerValidate.pdf}
     \caption{Verification of compressible Euler equations.}
     \label{fig:eulerSurface}
 \end{figure}
@@ -408,7 +408,7 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 
 \begin{figure}[H]
 \widefigure
-    \includegraphics[scale=0.9]{figs/speedUpeulerNew.pdf}
+    \includegraphics[scale=0.85]{figs/speedUpeulerNew.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
     \label{fig:newSpeedupEuler}
 \end{figure}
@@ -423,7 +423,7 @@ Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently 
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.9]{figs/speedUpeulerOld.pdf}
+    \includegraphics[scale=0.85]{figs/speedUpeulerOld.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupEuler}
 \end{figure}
@@ -443,14 +443,14 @@ The \Standard{} solver shows better weak scalability in both cases. This suggest
 
 \begin{figure}[H]
 \widefigure
-    \includegraphics[scale=0.9]{figs/weakScalabilityHeat.pdf}
+    \includegraphics[scale=0.85]{figs/weakScalabilityHeat.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the heat equations.}
     \label{fig:scalabilityHeat}
 \end{figure}
 
 \begin{figure}[H]
     \widefigure
-    \includegraphics[scale=0.9]{figs/weakScalabilityEuler.pdf}
+    \includegraphics[scale=0.85]{figs/weakScalabilityEuler.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the Euler equations.}
     \label{fig:scalabilityEuler}
 \end{figure}
@@ -488,7 +488,7 @@ So, while this achieves savings in latency, performance takes a hit due to threa
 
 \begin{figure}[H]
 \widefigure
-    \includegraphics[scale=0.9]{figs/clockTimeSwepteulerOld.pdf}
+    \includegraphics[scale=0.85]{figs/clockTimeSwepteulerOld.pdf}
     \caption{Clock time results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:clocktimeOldEuler}
 \end{figure}
