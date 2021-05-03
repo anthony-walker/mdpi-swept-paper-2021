@@ -48,7 +48,7 @@
 \issuenum{1}
 \articlenumber{0}
 \pubyear{2021}
-\copyrightyear{2020}
+\copyrightyear{2021}
 %\externaleditor{Academic Editor: Firstname Lastname} % For journal Automation, please change Academic Editor to "Communicated by"
 \datereceived{} 
 \dateaccepted{} 
@@ -56,7 +56,7 @@
 \hreflink{https://doi.org/} % If needed use \linebreak
 %------------------------------------------------------------------
 % The following line should be uncommented if the LaTeX file is uploaded to arXiv.org
-\pdfoutput=1
+%\pdfoutput=1
 
 %=================================================================
 % Add packages and commands here. The following packages are loaded in our class file: fontenc, inputenc, calc, indentfirst, fancyhdr, graphicx, epstopdf, lastpage, ifthen, lineno, float, amsmath, setspace, enumitem, mathpazo, booktabs, titlesec, etoolbox, tabto, xcolor, soul, multirow, microtype, tikz, totcount, changepage, paracol, attrib, upgreek, cleveref, amsthm, hyphenat, natbib, hyperref, footmisc, url, geometry, newfloat, caption
@@ -85,17 +85,10 @@
 \newcommand\fs{0.7}
 
 \def\oldCPU{Intel Skylake Silver 4114} %20 core cpu
-\def\oldGPU{Nvidia GeForce GTX 1080 Ti}
+\def\oldGPU{GeForce GTX 1080 Ti}
 
 \def\newCPU{Intel E5-2698v4} %20 core cpu
-\def\newGPU{Nvidia Tesla V100-DGXS-32GB}
-
-
-
-
-
-
-
+\def\newGPU{Tesla V100-DGXS-32GB}
 %=================================================================
 %% Please use the following mathematics environments: Theorem, Lemma, Corollary, Proposition, Characterization, Property, Problem, Example, ExamplesandDefinitions, Hypothesis, Remark, Definition, Notation, Assumption
 %% For proofs, please use the proof environment (the amsthm package is loaded by the MDPI class).
@@ -112,7 +105,7 @@
 \newcommand{\orcidauthorB}{0000-0003-4425-7097} % Add \orcidB{} behind the author's name
 
 % Authors, for the paper (add full first names)
-\Author{Anthony S.~Walker\orcidA{} and Kyle E.~Niemeyer\orcidB{}}
+\Author{Anthony S.~Walker \orcidA{} and Kyle E.~Niemeyer \orcidB{}}
 
 % MDPI internal command: Authors, for metadata in PDF
 \AuthorNames{Anthony S.~Walker and Kyle E.~Niemeyer}
@@ -123,9 +116,7 @@
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
 \address[1]{%
-School of Mechanical, Industrial, and Manufacturing Engineering\\
-Oregon State University\\
-Corvallis, Oregon, USA}
+School of Mechanical, Industrial, and Manufacturing Engineering, Oregon State University, Corvallis, Oregon, USA}
 
 % Contact information of the corresponding author
 \corres{Correspondence: kyle.niemeyer@oregonstate.edu}
@@ -224,7 +215,7 @@ Hopefully, it is clear at this point that latency reduction is important in high
 
 \subsection{Implementation \& Objectives}
 
-We call our implementation of the two-dimensional swept rule \pysweep{}\footnote{\pysweep~is openly available at \github}. It consists of two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep, and serves as a baseline to the swept rule. Both solver use the same decomposition, process handling, and work allocation code so that a performance comparison between them is representative of swept rule performance. However, \Swept{} does require additional calculations prior to solving which are penalties of this swept rule implementation. 
+We call our implementation of the two-dimensional swept rule \pysweep{} \footnote{\pysweep~is openly available at \github}. It consists of two core solvers: \Swept{} and \Standard{}. \Swept{} minimizes communication during the simulation via the swept rule. \Standard{} is a traditional solver that communicates as is necessary to complete a timestep, and serves as a baseline to the swept rule. Both solver use the same decomposition, process handling, and work allocation code so that a performance comparison between them is representative of swept rule performance. However, \Swept{} does require additional calculations prior to solving which are penalties of this swept rule implementation. 
 
 We implemented \pysweep{} using Python and CUDA; the parallelism relies primarily on \texttt{mpi4py} \cite{DalcinMPIPython} and \texttt{pycuda} \cite{KlocknerPyCUDAGeneration}. Each process spawned by MPI is capable of managing a GPU and a CPU process, e.g., 20 processes can handle up to 20 GPUs and 20 CPU processes. Consequently, the aforementioned implementation allowed us to meet the objectives of this study on the swept rule, which include understanding:
 \begin{enumerate}
@@ -290,7 +281,7 @@ The first phase of calculation is the \Up{} shown in Figure~\ref{fig:MainOne} (t
 
 The next phase in the process is referred to as the Bridge which occurs independently in each dimension. The solution procedure for the bridges on the CPU and GPU follows the same paradigm as the \Up{} but twice as many bridges are formed because there is one in each direction. Bridges formed in each direction are labeled as such, e.g., the Bridge that forms parallel to the $y$ axis as time progresses is referred to as the \Yb{}. The initial boundaries of each Bridge were determined from $n$ and $b$. The Bridges grew by $2n$ from these initial boundaries in their reference dimensions and shrank by $2n$ in the other dimension which allowed the appropriate calculation points to be determined conditionally or prior to calculation.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics{figs/SubsPlot1.pdf}
     \caption{The first four steps in the swept solution process: \Up{} (top left), \Yb{} (top right), \texttt{Communication} (bottom left), and \Xb{} (bottom right).}
@@ -305,7 +296,7 @@ The \Oct{} always precedes the \Yb{}, Communicate, \Xb{} sequence. However, the 
 
 % Octahedron
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics{figs/SubsPlot2.pdf}
     \caption{The intermediate and final steps of the swept solution: \Oct{} (top left), \Xb{} (top right), \Yb (bottom left), and \Down{} (bottom right).}
@@ -330,12 +321,21 @@ Here we present the results of applying \pysweep{} to the heat transfer and comp
 
 We solved the heat diffusion equation numerically using forward-Euler and a three-point central difference in space. We verified it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation described in Appendix~\ref{Heat-Diffusion}. Figure~\ref{fig:heatSurface} compares the temperature distribution of the numerical and analytical solutions over time. The temperature distribution is representative of a flat plate with a checkerboard pattern of hot and cold spots. We see these spots diffuse out over time and approach a steady intermediate temperature which is expected. We also see that the numerical solution matches the analytical solution which verifies that we are solving the problem correctly.
 
-\begin{figure}[htbp]
-    \centering
+\newpage
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[H]
+    \widefigure
     \includegraphics[scale=0.9,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
     \caption{Verification of heat diffusion equation.}
     \label{fig:heatSurface}
 \end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
 
 Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
 \begin{equation}
