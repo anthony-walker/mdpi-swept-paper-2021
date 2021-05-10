@@ -172,21 +172,24 @@ We can conclude from this study that the swept rule offers both potential for sp
 \begin{document}
 
 \section{Introduction}
-Partial differential equations (PDEs) are used to model many important phenomena in science and engineering. Among these, fluid mechanics and heat transfer are which can be notoriously difficult to solve on pragmatic scales. \former{Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemical reactions over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time.}{revTwo} \revised{Compressible flow is a good example of an expensive numerical simulation because it involves fluid mechanics and heat transfer over massive areas of impact. Compressible flow can also be unsteady---so it changes over time.}{revTwo}The ability to accurately model and predict the properties of such phenomena in real time would allow for better responses, but there are many challenges associated with making these predictions.
+Partial differential equations (PDEs) are used to model many important phenomena in science and engineering. 
+Among these, fluid dynamics and heat transfer are which can be notoriously difficult to solve on pragmatic scales. \former{Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemical reactions over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time.}{revTwo} 
+% \revised{Compressible flow is a good example of an expensive numerical simulation because it involves fluid mechanics and heat transfer over massive areas of impact. Compressible flow can also be unsteady---so it changes over time.}{revTwo}
+The ability to accurately model and predict the properties of such phenomena in real time would allow for better responses, but there are many challenges associated with making these predictions.
 
-Unsteady multi-dimensional PDEs often require using of distributed-memory computing systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. Advancing the solution at any point in the grid inherently depends on the neighboring points in each spatial dimension. This dependence requires communication between computing nodes, to transfer data associated with the boundary locations. Each of these communications incurs a minimum cost regardless of the amount of information communicated---this is network latency. In contrast, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can significantly restrict the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the ``latency barrier'' and it impacts large-scale simulations that involve advancing many time steps, i.e., ones that require a large amount of communication \cite{Alhubail2016ThePDEs}. 
-The barrier is a bottleneck in the system that can limit the performance regardless of the architecture.
+Unsteady multi-dimensional PDEs often require using of distributed-memory computing systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. Advancing the solution at any point in the grid inherently depends on the neighboring points in each spatial dimension. This dependence requires communication between computing nodes, to transfer data associated with the boundary locations. Each of these communications incurs a minimum cost regardless of the amount of information communicated---this is network latency. In contrast, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can significantly restrict the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the ``latency barrier'' and it impacts large-scale simulations that involve advancing many time steps, i.e., ones that require a large amount of communication \cite{Alhubail2016ThePDEs}. The barrier is a bottleneck in the system that can limit the performance regardless of the architecture.
 
-Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of simultaneous calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or systems with multiple processor types---CPUs and GPUs, in this case \cite{owens2007survey,owens2008gpu}. Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs. Minimizing latency in high performance computing is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{Alexandrov2016RouteSkills}.
+Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of simultaneous calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or systems with multiple processor types---CPUs and GPUs, in this case \cite{owens2007survey,owens2008gpu}. 
+Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs. Minimizing latency in high performance computing is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{Alexandrov2016RouteSkills}.
 
 This study presents our implementation and testing of a two-dimensional heterogeneous solver for unsteady partial differential equations that employs a technique to help overcome the latency barrier---the swept rule \cite{Alhubail2016ThePDEs}. In other words, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating with other computing nodes (ranks). In this article, we first discuss related work, distinguish our work from prior swept studies, and provide more motivation in Section~\ref{related-section}. Next, we describe implementation details, objectives, study parameters, design decisions, methods, and tests in Section~\ref{methods-section}. As expected, this is followed with results and conclusions in Sections~\ref{results-section} and~\ref{conclusions-section}.
 
 \section{Related Work}
 \label{related-section}
 Surmounting the latency barrier has been approached in many ways; the most closely related to this study include prior swept rule studies which involve multiple dimensions and architectures but not the combination of the two \cite{Alhubail2016ThePDEs,Alhubail2018ThePDEs,Magee2018AcceleratingDecomposition,Magee2020ApplyingSystems}. Parallel-in-time methods are also related to the swept rule but differ in the sense that they iteratively parallelize the temporal direction, while the swept rule minimizes communication \cite{Gander201550Integration}. There are many examples of parallel-in-time methods which are all variations of the core concept \cite{Falgout2014ParallelMultigrid,Maday2020AnAlgorithm,Wu2018Parareal,EmmettTowardEquations,MinionINTERWEAVINGMULTIGRID,Hahne2020PyMGRIT:MGRIT}. For example, Parareal is one of the more popular parallel-in-time methods; it works by iterating over a series of coarse and fine grids with initial guesses to parallelize the problem \cite{Maday2020AnAlgorithm}. 
-However, there are some stability concerns with Parareal that are addressed by local time integrators \cite{Wu2018Parareal}. These methods have the same goal but achieve that goal differently. Similarly, cache optimization techniques have the same objective, but they achieve it differently by optimizing communication not avoiding it \cite{Kowarschik2003AnAlgorithms}.
+However, there are some stability concerns with Parareal that are addressed by local time integrators \cite{Wu2018Parareal}. These methods have the same goal but achieve that goal differently. \former{Similarly, cache optimization techniques have the same objective, but they achieve it differently by optimizing communication not avoiding it \cite{Kowarschik2003AnAlgorithms}.}{revTwo} \revised{Similarly, techniques that strive for higher cache locality aim to reduce communication costs, but they achieve it differently. These methods focus on improving cache locality and management, i.e., having the information readily available in memory that is quickly accessed \cite{wolfe_more_1989,song_new_1999,Kowarschik2003AnAlgorithms,wonnacott_using_2000}. The difference being that they are not avoiding communication but optimizing it.}{revTwo} 
 
-Finally, communication avoidance techniques closely emulate the swept rule but involve overlapping parts or redundant operations. The GPU implementation particularly blurs this difference because it solves an extra block to avoid intra-node communication but no extra blocks are solved for inter-node communication. The swept rule also differs because it particularly focuses on solving PDEs. There are varying degrees of communication algorithms that tend to focus on linear algebra \cite{DemmelAvoidingComputations, Ballard2011MinimizingAlgebra,BaboulinAMachines,Khabou2012LUVersion,SolomonikAHoefler}. 
+\former{Finally, communication}{revTwo} \revised{Communication}{revTwo} avoidance techniques closely emulate the swept rule but involve overlapping parts or redundant operations. The GPU implementation particularly blurs this difference because it solves an extra block to avoid intra-node communication but no extra blocks are solved for inter-node communication. The swept rule also differs because it particularly focuses on solving PDEs. There are varying degrees of communication algorithms that tend to focus on linear algebra \cite{DemmelAvoidingComputations, Ballard2011MinimizingAlgebra,BaboulinAMachines,Khabou2012LUVersion,SolomonikAHoefler}. \revised{Finally, the DiamondTorre algorithm is designed to improve bandwidth costs of simulations and fully realize parallelism on GPUs by achieving high levels of data localization \cite{levchenko_diamondtorre_2016}}{revTwo}.
 
 The swept rule was originally developed by Alhubail et al.~\cite{Alhubail2016ThePDEs}, who presented a one-dimensional CPU-only swept PDE solver which was tested by solving the Kuramoto--Sivashinsky equation and the compressible Euler equations. 
 They concluded that in each case a number of integrations can be performed during the \former{latency}{revTwo} time of a communication. Their analysis showed that integration can be made faster by latency reduction and increasing computing power of the computing nodes \cite{Alhubail2016ThePDEs}. 
@@ -260,18 +263,21 @@ Hardware was selected based on the available resources at Oregon State Universit
 The first two nodes each have \newGPU{} GPUs and \newCPU{} CPUs, and the second two nodes each have \oldGPU{} GPUs and \oldCPU{} CPUs.
 As a convention, parameters with respect to the first set of hardware will be referred to with a subscript 1 and likewise a subscript 2 for the second set. Each of these sets was used to solve both the heat diffusion equation and the compressible Euler equations. Section~\ref{results-section} present the performance data we collected. 
 
-The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to four nodes. Each node was given approximately two million spatial points and solved both problems for five hundred time steps. A share of 90\% and block size of 16 were used in this test. 
+\revised{We also performed a scalability study on the two solvers }{revTwo}
+
+\former{The results of this study raised some questions about the scalability of the algorithms used. Accordingly, weak scalability was considered with up to four nodes. Each node was given approximately two million spatial points and solved both problems for 500 time steps. A share of 90\% and block size of 16 were used in this test.}{revTwo} 
 
 \subsection{Swept Solution Process}
 \label{swept-process-section}
 \former{To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. The algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. This process becomes more convoluted as we dive deeper into the details. To aid understanding, we refer to the two primary actions of the code as communication and calculation. We refer to the specific type of calculation as the phase. }{revOne}
 
-\revised{To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. High level solution processes for the \Swept{} solver and \Standard{} solver are shown in  Figures~\ref{fig:SweptProcess} and~\ref{fig:StandProcess}.In Figure~\ref{fig:SweptProcess}, the swept process starts with preprocessing where each node is given instructions about what it is solving. Each node then initially solves as much as it can of several time steps. A communication between nodes then allows the nodes to solve the remainder of those time steps. This process repeats until the desired time step is achieved.}{revOne} 
+\revised{To recap, the swept rule is a latency reduction technique that focuses on obtaining a solution to unsteady PDEs at as many possible locations and times prior to communicating. 
+High level solution processes for the \Swept{} solver and \Standard{} solver are shown in  Figures~\ref{fig:SweptProcess} and~\ref{fig:StandProcess}.In Figure~\ref{fig:SweptProcess}, the swept process starts with preprocessing where each node is given instructions about what it is solving. Each node then initially solves as much as it can of several time steps. A communication between nodes then allows the nodes to solve the remainder of those time steps. This process repeats until the desired time step is achieved.}{revOne} 
 
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/swept-process.pdf}
     \caption{High level view of the swept solution process.}
@@ -285,7 +291,7 @@ The standard process in Figure~\ref{fig:StandProcess} demonstrates the tradition
 
 \end{paracol}
 \nointerlineskip
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/standard-process.pdf}
     \caption{High level view of the standard solution process.}
@@ -314,7 +320,7 @@ The next phase in the process is referred to as the Bridge which occurs independ
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics{figs/SubsPlot1.pdf}
     \caption{The first four steps in the swept solution process: \Up{} (top left), \Yb{} (top right), \texttt{Communication} (bottom left), and \Xb{} (bottom right).}
@@ -335,7 +341,7 @@ The \Oct{} always precedes the \Yb{}, Communicate, \Xb{} sequence. However, the 
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics{figs/SubsPlot2.pdf}
     \caption{The intermediate and final steps of the swept solution: \Oct{} (top left), \Xb{} (top right), \Yb (bottom left), and \Down{} (bottom right).}
@@ -357,7 +363,7 @@ The solver has a few restrictions based on architecture and implementation which
 \section{Results}
 \label{results-section}
 %Array sizes [102400, 230400, 409600, 640000, 921600, 1254400]
-Here we present the results of applying \pysweep{} to the heat transfer and compressible flow problems introduced in section~\ref{methods-section}. When solving these problems, we varied the following parameters to assess performance: array size, block size, share, and hardware. Array sizes of [320, 480, 640, 800, 960, 1120] were used to make the total number of points span a couple orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. Along with these parameters, we advanced each problem 500 time steps.
+Here we present the results of applying \pysweep{} to the heat transfer and compressible flow problems introduced in section~\ref{methods-section}. When solving these problems, we varied the following parameters to assess performance: array size, block size, share, and hardware. Array sizes of [320, 480, 640, 800, 960, 1120] were used to make the total number of points span a couple orders of magnitude. Block sizes of [8, 12, 16, 24, 32] were used based on hardware constraints. Share was varied from 0 to 100\% at intervals of 10\%. \revised{Based on the initial results, the weak scalability study was run with a share of 90\% and block size of 16.}{revTwo} Along with these parameters, we advanced each problem 500 time steps.
 
 \subsection{Heat Diffusion Equation}
 \label{hdeResults}
@@ -369,7 +375,7 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/heatValidate.pdf}
     \caption{Verification of heat diffusion equation.}
@@ -378,16 +384,16 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
-\former{Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
-\begin{equation}
-    S = \frac{R_{\textit{standard}}}{R_{\textit{swept}}} \;,
-\end{equation}
-where $R_i$ is the run time of simulation $i$.}{revTwo}
-\revised{Our performance metrics of choice for the swept rule were speedup, $S$, and time per timestep, $T$, as a function of array size, block size, and share:
+%\former{Our performance metric of choice for the swept rule was speedup, $S$, as a function of array size, block size, and share:
+%\begin{equation}
+%    S = \frac{R_{\textit{standard}}}{R_{\textit{swept}}} \;,
+%\end{equation}
+%where $R_i$ is the run time of simulation $i$.}{revTwo}
+\revised{Our performance metrics of choice for the swept rule were speedup, $S$, and time per timestep, $T$, as a function of array size, block size, and share:}{revTwo}
 \begin{equation}
     S = \frac{T_{\textit{standard}}}{T_{\textit{swept}}} \;,
 \end{equation}
-where $T_i$ is with respect to simulation type $i$.}{revTwo}
+\revised{where $T_i$ is with respect to simulation type $i$.}{revTwo}
 Figures~\ref{fig:newSpeedupHeat} and~\ref{fig:oldSpeedupHeat} show the performance results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. 
 In these figures, a black dot with a white border represents the worst case and a white dot with a black border represents the best case.
 
@@ -395,8 +401,8 @@ In these figures, a black dot with a white border represents the worst case and 
 
 \end{paracol}
 \nointerlineskip
-
-\begin{figure}[H]
+%Make subfigure and have standard first
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/SpeedupTPTheatNew.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \newGPU{} GPUs and \newCPU{} CPUs.}
@@ -410,12 +416,36 @@ Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.69.
 It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. 
 The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20.
 
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepSweptheatNew.pdf}
+    \caption{Time per timestep performance using \Swept{} solver with \newCPU{} CPUs and \newGPU{} GPUs.}
+    \label{fig:tptNewHeatSwept} 
+\end{figure}
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepStandardheatNew.pdf}
+    \caption{Time per timestep performance using \Standard{} solver with \newCPU{} CPUs and \newGPU{} GPUs.}
+    \label{fig:tptNewHeatStandard} 
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+\revised{Figures~\ref{fig:tptNewHeatSwept} and~\ref{fig:tptNewHeatStandard} show the performance of the two solvers as time per timestep. As you }{revTwo}
+
+
 %\newpage
 
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/SpeedupTPTheatOld.pdf}
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
@@ -429,18 +459,46 @@ In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{
 Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. 
 The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit.
 
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepSweptheatOld.pdf}
+    \caption{Time per timestep performance using \Swept{} solver with \oldCPU{} CPUs and \newGPU{} GPUs.}
+    \label{fig:tptOldHeatSwept} 
+\end{figure}
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepStandardheatOld.pdf}
+    \caption{Time per timestep performance using \Standard{} solver with \oldCPU{} CPUs and \oldGPU{} GPUs.}
+    \label{fig:tptOldHeatStandard} 
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+\revised{Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the performance of the two solvers as time per timestep. As you }{revTwo}
+
 \subsection{Compressible Euler Equations}
 \label{eulerVortexResults}
 
 We solved the Euler equations using a second-order Runge--Kutta scheme in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex described in Appendix~\ref{Compressible-Euler}. 
-We performed the same tests here as in Section~\ref{hdeResults}. Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$. This specific angle comes from the imposed velocity field. We also see that the solutions match.
+We performed the same tests here as in Section~\ref{hdeResults}. 
+Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. 
+Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. 
+As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$. 
+This specific angle comes from the imposed velocity field. 
+We also see that the solutions match.
 
 \newpage
 
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \widefigure
     \includegraphics[scale=0.85,trim={0.45cm 0.3cm 0.1cm 0.9cm},clip]{figs/eulerValidate.pdf}
     \caption{Verification of compressible Euler equations.}
@@ -455,7 +513,7 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \widefigure
     \includegraphics[scale=0.85]{figs/speedUpeulerNew.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \newGPU{} GPUs and \newCPU{} CPUs.}
@@ -467,10 +525,34 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 
 Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.41. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
 
+
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepSwepteulerNew.pdf}
+    \caption{Time per timestep performance using \Swept{} to solve the Euler equations with \newCPU{} CPUs and \newGPU{} GPUs.}
+    \label{fig:tptNewEulerSwept} 
+\end{figure}
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepStandardeulerNew.pdf}
+    \caption{Time per timestep performance using \Standard{}{} to solve the Euler equations with \newCPU{} CPUs and \newGPU{} GPUs.}
+    \label{fig:tptNewEulerStandard} 
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+\revised{Figures~\ref{fig:tptNewEulerSwept} and~\ref{fig:tptNewEulerStandard} show the performance of the two solvers as time per timestep. As you }{revTwo}
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/speedUpeulerOld.pdf}
     \caption{Swept rule speedup results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
@@ -479,6 +561,29 @@ Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently 
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepSwepteulerOld.pdf}
+    \caption{Time per timestep performance using \Swept{} to solve the Euler equations with \oldCPU{} CPUs and \oldGPU{} GPUs.}
+    \label{fig:tptoldEulerSwept} 
+\end{figure}
+
+\begin{figure}[htbp]
+    \widefigure
+    \includegraphics[scale=0.85]{figs/timePerStepStandardeulerOld.pdf}
+    \caption{Time per timestep performance using \Standard{}{} to solve the Euler equations with \oldCPU{} CPUs and \oldGPU{} GPUs.}
+    \label{fig:tptoldEulerStandard} 
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+\revised{Figures~\ref{fig:tptoldEulerSwept} and~\ref{fig:tptoldEulerStandard} show the performance of the two solvers as time per timestep. As you }{revTwo}
 
 \subsection{Weak Scalability}
 
@@ -490,14 +595,14 @@ The \Standard{} solver shows better weak scalability in both cases. This suggest
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \widefigure
     \includegraphics[scale=0.85]{figs/weakScalabilityHeat.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the heat equations.}
     \label{fig:scalabilityHeat}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \widefigure
     \includegraphics[scale=0.85]{figs/weakScalabilityEuler.pdf}
     \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the Euler equations.}
@@ -535,7 +640,7 @@ So, while this achieves savings in latency, performance takes a hit due to threa
 \end{paracol}
 \nointerlineskip
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \widefigure
     \includegraphics[scale=0.85]{figs/clockTimeSwepteulerOld.pdf}
     \caption{Clock time results  for the compressible Euler equations with \oldGPU{} GPUs and \oldCPU{} CPUs.}
