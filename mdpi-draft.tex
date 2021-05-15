@@ -65,6 +65,7 @@
 \usepackage{xcolor}
 \usepackage[xcolor]{changebar}
 \usepackage[normalem]{ulem}
+\usepackage{subcaption}
 % %Reviewer Colors
 \definecolor{revOne}{HTML}{cc0000}
 \definecolor{revTwo}{HTML}{cc9900}
@@ -228,42 +229,42 @@ We implemented \pysweep{} using Python and CUDA; the parallelism relies primaril
     \item the impact of input parameters on its performance.
 \end{enumerate}
 
-% \subsection{Introduction to The Swept Rule}
-% The swept rule is an abstract concept that is difficult to grasp without thorough introduction, so we first consider the idea as a process and then in one dimension. High level solution processes for the \Swept{} solver and \Standard{} solver are shown in  Figures~\ref{fig:SweptProcess} and~\ref{fig:StandProcess}. In Figure~\ref{fig:SweptProcess}, the swept process starts with preprocessing where each node is given instructions about what it is solving. Each node then initially solves as much as it can of several time steps. A communication between nodes then allows the nodes to solve the remainder of those time steps. This process repeats until the desired time step is achieved. 
+\subsection{Introduction to The Swept Rule}
+The swept rule is an abstract concept that is difficult to grasp without thorough introduction, so we first consider the idea as a process and then in one dimension. Once the process is outlined and parameters are understood, we jump into the details of two dimensions. High level solution processes for the \Swept{} solver and \Standard{} solver are shown in  Figures~\ref{fig:SweptProcess} and~\ref{fig:StandProcess}. In Figure~\ref{fig:SweptProcess}, the swept process starts with preprocessing where each node is given instructions about what it is solving. Each node then initially solves as much as it can of several time steps. A communication between nodes then allows the nodes to solve the remainder of those time steps. This process repeats until the desired time step is achieved. 
 
-% \end{paracol}
-% \nointerlineskip
+\end{paracol}
+\nointerlineskip
 
-% \begin{figure}[htbp]
-%     \widefigure
-%     \includegraphics[scale=0.85]{figs/swept-process.pdf}
-%     \caption{High level view of the swept solution process.}
-%     \label{fig:SweptProcess}
-% \end{figure}
-% \begin{paracol}{2}
-% \linenumbers
-% \switchcolumn
+\begin{figure}[htbp]
+    
+\end{figure}
 
-% The standard process in Figure~\ref{fig:StandProcess} demonstrates the traditional way of solving these problems. Similarly, the standard process starts with any preprocessing that is necessary. It proceeds to solve a single time step and then communicate. The standard process repeats this until the desired timestep is achieved. Notice in this example with three timesteps, the standard process communicates twice and the swept process communicates ones. Reducing these communication events is the core idea behind the swept rule.
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \widefigure
+        \includegraphics[scale=0.85]{figs/swept-process.pdf}
+        \caption{High level view of the swept solution process.}
+        \label{fig:SweptProcess}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{\textwidth}
+        \widefigure
+        \includegraphics[scale=0.85]{figs/standard-process.pdf}
+        \caption{High level view of the standard solution process.}
+        \label{fig:StandProcess}
+    \end{subfigure}
+    \caption{Three simple graphs}
+    \label{fig:three graphs}
+\end{figure}
 
-% \end{paracol}
-% \nointerlineskip
-% \begin{figure}[htbp]
-%     \widefigure
-%     \includegraphics[scale=0.85]{figs/standard-process.pdf}
-%     \caption{High level view of the standard solution process.}
-%     \label{fig:StandProcess}
-% \end{figure}
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
 
-% \begin{paracol}{2}
-% \linenumbers
-% \switchcolumn
+The standard process in Figure~\ref{fig:StandProcess} demonstrates the traditional way of solving these problems. Similarly, the standard process starts with any preprocessing that is necessary. It proceeds to solve a single time step and then communicate. The standard process repeats this until the desired timestep is achieved. Notice in this example with three timesteps, the standard process communicates twice and the swept process communicates ones. Reducing these communication events is the core idea behind the swept rule.
 
-<<<<<<< HEAD
-% \revised{More specifcally, the swept algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. Figures 
-=======
 More specifcally, the swept algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. Figures 
->>>>>>> 3e3b3b0dfe54b8a81d7df82987134cf2a083b412
 
 \subsection{Parameters \& Testing}
 \label{parameters-section}
