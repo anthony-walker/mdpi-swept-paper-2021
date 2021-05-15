@@ -264,9 +264,7 @@ The swept rule is an abstract concept that is difficult to grasp without thoroug
 
 The standard process in Figure~\ref{fig:StandProcess} demonstrates the traditional way of solving these problems. Similarly, the standard process starts with any preprocessing that is necessary. It proceeds to solve a single time step and then communicate. The standard process repeats this until the desired timestep is achieved. Notice in this example with three timesteps, the standard process communicates twice and the swept process communicates once. Reducing these communication events is the core idea behind the swept rule.
 
-More specifcally, the swept algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. We first demonstrate this in one dimension in Figures~\ref{}.
-
-
+More specifcally, the swept algorithm works by solving as many spatial points of a time step as it can and repeating this for subsequent time steps until information is required from neighboring nodes or hardware. This leaves the solution in a state with several incomplete time steps. Communication is then necessary to continue and fill in the incomplete time steps. This process repeats in various forms until the entire solution space has been completed to a desired time level. We first demonstrate this in one dimension on two nodes with a three point stencil in Figures~\ref{fig:1d-swept-rule}. The black boxes in Figure~\ref{fig:1d-swept-rule} represents the block size which is a fixed parameter throughout the simulation---in this case it is 12. The blocksize is a metric used to describe decomposition on GPUs which we formally discuss in the next section. 
 
 \end{paracol}
 \nointerlineskip
@@ -277,6 +275,7 @@ More specifcally, the swept algorithm works by solving as many spatial points of
 
 \begin{figure}[htbp]
     \widefigure
+    \hfill
     \begin{subfigure}[b]{0.5\textwidth}
         \widefigure
         \includegraphics[scale=0.6]{figs/a_UpTriangle.pdf}
@@ -290,7 +289,8 @@ More specifcally, the swept algorithm works by solving as many spatial points of
         \caption{The first communication phase of the one-dimensional swept rule.}
         \label{fig:1d-comm-1}
     \end{subfigure}
-    \\
+    \par\bigskip
+    \hfill
     \begin{subfigure}[b]{0.45\textwidth}
         \widefigure
         \includegraphics[scale=0.6]{figs/c_Diamond.pdf}
@@ -304,13 +304,15 @@ More specifcally, the swept algorithm works by solving as many spatial points of
         \caption{The second communication phase of the one-dimensional swept rule.}
         \label{fig:1d-comm-2}
     \end{subfigure}
-    \caption{Process diagrams for the \Swept{} and \Standard{} solvers. \textbf{Squares}: pre and post processing. \textvf{Circles}: calculation local to a node for a given time step. \textbf{Diamonds}: communication between nodes.}
-    \label{fig:1d-swept}
+    \caption{The first four operations of the one-dimensional swept rule using two nodes.}
+    \label{fig:1d-swept-rule}
 \end{figure}
 
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
+
+The process in one-dimension progresses Figure~\ref{fig:UpTriangle} 
 
 
 
