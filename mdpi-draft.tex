@@ -277,25 +277,32 @@ More specifcally, the swept algorithm works by solving as many spatial points of
 
 \begin{figure}[htbp]
     \widefigure
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.5\textwidth}
         \widefigure
-        \includegraphics[scale=0.5]{figs/a_UpTriangle.pdf}
+        \includegraphics[scale=0.6]{figs/a_UpTriangle.pdf}
         \caption{The first calculation phase of the one-dimensional swept rule.}
-        \label{fig:SweptProcess}
+        \label{fig:UpTriangle}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
         \widefigure
-        \includegraphics[scale=0.5]{figs/b_Comm1.pdf}
-        \caption{The first communication of the swept simulation}
-        \label{fig:SweptProcess}
+        \includegraphics[scale=0.6]{figs/b_Comm1.pdf}
+        \caption{The first communication phase of the one-dimensional swept rule.}
+        \label{fig:1d-comm-1}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.45\textwidth}
+        \widefigure
+        \includegraphics[scale=0.6]{figs/c_Diamond.pdf}
+        \caption{The second calculation phase of the one-dimensional swept rule.}
+        \label{fig:Diamond}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
         \widefigure
-        \includegraphics[scale=0.5]{figs/c_Diamond.pdf}
-        \caption{The second calculation phase of the swept}
-        \label{fig:SweptProcess}
+        \includegraphics[scale=0.6]{figs/d_Comm2.pdf}
+        \caption{The second communication phase of the one-dimensional swept rule.}
+        \label{fig:1d-comm-2}
     \end{subfigure}
     \caption{Process diagrams for the \Swept{} and \Standard{} solvers. \textbf{Squares}: pre and post processing. \textvf{Circles}: calculation local to a node for a given time step. \textbf{Diamonds}: communication between nodes.}
     \label{fig:1d-swept}
