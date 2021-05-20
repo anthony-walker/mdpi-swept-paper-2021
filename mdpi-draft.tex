@@ -179,10 +179,6 @@ We can conclude from this study that the swept rule offers both potential for sp
 
 \revised{Achieving the goals outlined in the report require focus on solvers that effectively utilize heterogeneous HPC systems. High latency costs are a substantial barrier in achieving these goals \cite{slotnick_cfd_2014} where advancements have been slower than other performance aspects \cite{patterson_latency_2004}. So, latency is a bottleneck in the system that can limit the performance regardless of the architecture and, the swept rule is a technique designed to circumvent this bottleneck \cite{alhubail_swept_2016-1}.}{revTwo} 
 
-%\former{Partial differential equations (PDEs) are used to model many important phenomena in science and engineering. Among these, fluid mechanics and heat transfer are which can be notoriously difficult to solve on pragmatic scales. Wildfire is a good example of an expensive numerical simulation because it involves fluid mechanics, heat transfer, and chemical reactions over massive areas of impact. Wildfire is also an unsteady phenomenon---so it changes over time. The ability to accurately model and predict the properties of such phenomena in real time would allow for better responses, but there are many challenges associated with making these predictions.}{revTwo}
-
-%\former{Unsteady multi-dimensional PDEs often require using of distributed-memory computing systems to obtain a solution with practical grid resolution or scale in a reasonable time frame. Advancing the solution at any point in the grid inherently depends on the neighboring points in each spatial dimension. This dependence requires communication between computing nodes, to transfer data associated with the boundary locations. Each of these communications incurs a minimum cost regardless of the amount of information communicated---this is network latency. In contrast, bandwidth is the variable cost associated with the amount of data transferred. The total latency cost can significantly restrict the solution's time to completion, especially when using distributed systems. This barrier to scaling is referred to as the ``latency barrier'' and it impacts large-scale simulations that involve advancing many time steps, i.e., ones that require a large amount of communication \cite{alhubail_swept_2016-1}. The barrier is a bottleneck in the system that can limit the performance regardless of the architecture.}{revTwo}
-
 Graphics processing units (GPUs) are powerful tools for scientific computing because they are well suited for parallel applications and large quantities of simultaneous calculations. Modern computing clusters often have GPUs in addition to CPUs because of their potential to accelerate simulations and, similar to CPUs, they perform best when communication is minimized. These modern clusters are often referred to as heterogeneous systems or systems with multiple processor types---CPUs and GPUs, in this case \cite{owens_survey_2007,owens_gpu_2008}. 
 Ideally, a heterogeneous application will minimize communication between the GPU and CPU which effectively minimizes latency costs. Minimizing latency in high performance computing is one of the barriers to exascale computing which requires the implementation of novel techniques to improve \cite{alexandrov_route_2016}.
 
@@ -236,10 +232,6 @@ The swept rule is an abstract concept that is difficult to grasp without thoroug
 \nointerlineskip
 
 \begin{figure}[htbp]
-    
-\end{figure}
-
-\begin{figure}[htbp]
     \widefigure
     \begin{subfigure}[b]{\textwidth}
         \widefigure
@@ -272,10 +264,6 @@ In Figure~\ref{fig:UpTriangle}, we show how the swept rule starts from a set of 
 
 \end{paracol}
 \nointerlineskip
-
-\begin{figure}[htbp]
-    
-\end{figure}
 
 \begin{figure}[htbp]
     \widefigure
@@ -428,6 +416,15 @@ Here we present the results of applying \pysweep{} to the heat transfer and comp
 
 We solved the heat diffusion equation numerically using forward-Euler and a three-point central difference in space. We verified it against an analytical solution developed for the two-dimensional heat diffusion equation with periodic boundary conditions---the problem formulation is described in Appendix~\ref{Heat-Diffusion}. Figure~\ref{fig:heatContour} compares the temperature distribution of the numerical and analytical solutions over time. The temperature distribution is representative of a flat plate with a checkerboard pattern of hot and cold spots. We see these spots diffuse out over time and approach a steady intermediate temperature which is expected. We also see that the numerical solution matches the analytical solution which verifies that we are solving the problem correctly.
 
+\revised{Our performance metrics of choice for the swept rule were speedup, $S$, and time per timestep, $T$, as a function of array size, block size, and share:}{revTwo}
+\begin{equation}
+    S = \frac{T_{\textit{standard}}}{T_{\textit{swept}}} \;,
+\end{equation}
+\revised{where $T_i$ is with respect to simulation type $i$.}{revTwo}
+
+Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. \revised{We also include direct results of time per timestep in Appendix~\ref{sec:add_figs} which aids discussion here. A black dot with a white border represents the worst case and a white dot with a black border represents the best case in all of the contours.}{revTwo}
+
+
 \end{paracol}
 \nointerlineskip
 
@@ -442,16 +439,8 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 \linenumbers
 \switchcolumn
 
-\newpage 
-
-\revised{Our performance metrics of choice for the swept rule were speedup, $S$, and time per timestep, $T$, as a function of array size, block size, and share:}{revTwo}
-\begin{equation}
-    S = \frac{T_{\textit{standard}}}{T_{\textit{swept}}} \;,
-\end{equation}
-\revised{where $T_i$ is with respect to simulation type $i$.}{revTwo}
-
-
-Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. \revised{We also include direct results of time per timestep in Appendix~\ref{sec:add_figs} which aids discussion here. A black dot with a white border represents the worst case and a white dot with a black border represents the best case in all of the contours.}{revTwo}
+Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.69. 
+It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20. \revised{The time per timestep Figures~\ref{fig:tptNewHeatSwept} and~\ref{fig:tptNewHeatStandard} show all of the optimal cases occurring at 100\% share with a block size of 8 being the apparent best choice both solvers.}{revTwo} 
 
 \end{paracol}
 \nointerlineskip
@@ -467,8 +456,7 @@ Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup resul
 \linenumbers
 \switchcolumn
 
-Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.69. 
-It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20. \revised{The time per timestep Figures~\ref{fig:tptNewHeatSwept} and~\ref{fig:tptNewHeatStandard} show all of the optimal cases occurring at 100\% share with a block size of 8 being the apparent best choice both solvers.}{revTwo} 
+In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit. Time per timestep \revised{Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the optimal cases occurring at 100\% for each solver but the optimal block size is different between the two. Lower blocksizes (8,12) appear to be the best case for the swept solver. However, the standard solver consistently has the best case occur at a size of 20.}{revTwo}
 
 \end{paracol}
 \nointerlineskip
@@ -479,12 +467,39 @@ It is clear that the performance of the swept rule diminishes as the array size 
     \caption{Swept rule speedup results for the Heat Diffusion Equation with \oldGPU{} GPUs and \oldCPU{} CPUs.}
     \label{fig:oldSpeedupHeat} 
 \end{figure}
+
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
 
-In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit. Time per timestep \revised{Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the optimal cases occurring at 100\% for each solver but the optimal block size is different between the two. Lower blocksizes (8,12) appear to be the best case for the swept solver. However, the standard solver consistently has the best case occur at a size of 16.}{revTwo}
 
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
+    \widefigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \widefigure
+        \includegraphics[scale=0.55]{figs/maxNewheat.pdf}
+        \caption{\newCPU{} and \newGPU{}}
+        \label{fig:MaxCasesHeatNew}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.5\textwidth}
+        \widefigure
+        \includegraphics[scale=0.55]{figs/maxOldheat.pdf}
+        \caption{\oldCPU{} and \oldGPU{}}
+        \label{fig:MaxCasesHeatOld}
+    \end{subfigure}
+    \caption{Time per timestep optimal performance for a given array size with a share of 100\%  solving the heat equation.}
+    \label{fig:max-heat}
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
+The speedup and time per timestep contours are a convenient way to sweep parameters and look for areas of performance benefit. We have determined from these results that a share of 100\% will provide the fastest times in all cases on a time per timestep basis for either hardware set. To dive further into this, we provide a plot of the optimal case time per timestep in Figure~\ref{fig:max-heat} which shows \Swept{} performance being very close to \Standard{} and better in multiple cases. 
 
 \subsection{Compressible Euler Equations}
 \label{eulerVortexResults}
@@ -492,8 +507,6 @@ In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{
 We solved the Euler equations using a second-order Runge--Kutta scheme in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex described in Appendix~\ref{Compressible-Euler}. We performed the same tests here as in Section~\ref{hdeResults}. Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. 
 As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$.This specific angle comes from the imposed velocity field. 
 We also see that the solutions match. Again, we included the time per timestep results in Appendix~\ref{sec:add_figs}.
-
-\newpage
 
 \end{paracol}
 \nointerlineskip
@@ -508,7 +521,11 @@ We also see that the solutions match. Again, we included the time per timestep r
 \linenumbers
 \switchcolumn
 
-Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently performs slower than \Standard{} with a range of 0.52--1.46. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The best case for a given array size tends to occur above approximately 90\% share but there is no clear block size trend. The worst case for a given array size tends to occur at 100\% share but likewise a block size trend is unclear. However, in the three largest array sizes they always occur at 100\% share with a block size of 8.
+Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently performs slower than \Standard{} with a range of 0.52--1.46. Similar to the heat equation, performance declines with increasing array size but there is benefit in some cases. The best case for a given array size tends to occur above approximately 90\% share but there is no clear block size trend. The worst case for a given array size tends to occur at 100\% share but likewise a block size trend is unclear. However, in the three largest array sizes they always occur at 100\% share with a block size of 8. 
+
+Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.41. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
+
+In the case of time per timestep, Figures~\ref{fig:tptNewEulerSwept},~\ref{fig:tptNewEulerStandard},~\ref{fig:tptoldEulerSwept}, and~\ref{fig:tptoldEulerStandard} show all optimal cases occurring at a share of 100\%. The \Swept{} solver has most of these occurrences between block sizes of 16-24 for the both hardware sets while \Standard{} skews to toward higher block sizes for \newCPU{} CPUs and \newGPU{} GPUs. We again consider the optimal cases over given array sizes in Figure~\ref{fig:max-euler} which shows that \Swept{} generally performs worse with a one to one comparison of the optimal cases. Results are aligned with \Standard{} at lower array sizes but quickly become worse.
 
 \end{paracol}
 \nointerlineskip
@@ -523,8 +540,6 @@ Figure~\ref{fig:newSpeedupEuler} shows that the \Swept{} solver consistently per
 \linenumbers
 \switchcolumn
 
-Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently slower than \Standard{} with a range of 0.36--1.41. Similar to the other configurations, performance consistently declines with increasing array size. Most best cases occur below approximately 50\% share with a block size between 12--24. The majority of the worst cases occur at 100\% share on the block size limits of 8 and 32.
-
 \end{paracol}
 \nointerlineskip
 
@@ -538,35 +553,59 @@ Figure~\ref{fig:oldSpeedupEuler} shows that the \Swept{} solver is consistently 
 \linenumbers
 \switchcolumn
 
-
-
-\subsection{Weak Scalability}
-
-These results raised some questions about the performance, e.g., why the swept rule performance decreases with increasing array size. We considered the weak scalability of the algorithms to explore this. Figures~\ref{fig:scalabilityHeat} and~\ref{fig:scalabilityEuler} show the time per timestep of each solver for the two problems. 
-The \Standard{} solver shows better weak scalability in both cases. This suggests that something other than latency dominates the simulations so latency improvements are less noticeable.
-
-\newpage
-
 \end{paracol}
 \nointerlineskip
 
 \begin{figure}[htbp]
-\widefigure
-    \includegraphics[scale=0.85]{figs/weakScalabilityHeat.pdf}
-    \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the heat equations.}
-    \label{fig:scalabilityHeat}
-\end{figure}
-
-\begin{figure}[htbp]
     \widefigure
-    \includegraphics[scale=0.85]{figs/weakScalabilityEuler.pdf}
-    \caption{Weak scalability of the \Swept{} and \Standard{} algorithms for the Euler equations.}
-    \label{fig:scalabilityEuler}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \widefigure
+        \includegraphics[scale=0.55]{figs/maxNeweuler.pdf}
+        \caption{\newCPU{} and \newGPU{}}
+        \label{fig:MaxCasesEulerNew}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.5\textwidth}
+        \widefigure
+        \includegraphics[scale=0.55]{figs/maxOldeuler.pdf}
+        \caption{\oldCPU{} and \oldGPU{}}
+        \label{fig:MaxCasesEulerOld}
+    \end{subfigure}
+    \caption{Time per timestep optimal performance for a given array size with a share of 100\% solving the Euler equations.}
+    \label{fig:max-euler}
 \end{figure}
 
 \begin{paracol}{2}
 \linenumbers
 \switchcolumn
+
+\subsection{Weak Scalability}
+
+These results raised some questions about the performance, e.g., is latency reduction of the swept rule outweighing the overhead of a more complicated process. To better isolate the latency and overhead of the method, we performed a weak scaling study with a share of 90\% and block size of 16 for the two equations over 500 hundred time steps. We demonstrate the results of this in Figure~\ref{fig:weak-scal} which shows the \Standard{} solver performing better in both cases. This suggests that implementation overhead is dominating the simulations so latency improvements are less noticeable. 
+
+\end{paracol}
+\nointerlineskip
+
+\begin{figure}[htbp]
+    \widefigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[scale=0.55]{figs/weakScalabilityHeat.pdf}
+        \caption{Heat equation}
+        \label{fig:scalabilityHeat}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.5\textwidth}
+        \widefigure
+        \includegraphics[scale=0.55]{figs/weakScalabilityEuler.pdf}
+        \caption{Euler equations}
+        \label{fig:scalabilityEuler}
+    \end{subfigure}
+    \caption{Weak scalability time per timestep results with a share of 90\%, blocksize of 16, and 500 timesteps.}
+    \label{fig:weak-scal}
+\end{figure}
+
+\begin{paracol}{2}
+\linenumbers
+\switchcolumn
+
 
 \section{Discussion}
 \label{discussion-section}
