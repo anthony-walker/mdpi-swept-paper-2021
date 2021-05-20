@@ -486,6 +486,8 @@ It is clear that the performance of the swept rule diminishes as the array size 
 In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit. Time per timestep \revised{Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the optimal cases occurring at 100\% for each solver but the optimal block size is different between the two. Lower blocksizes (8,12) appear to be the best case for the swept solver. However, the standard solver consistently has the best case occur at a size of 16.}{revTwo}
 
 
+
+
 \subsection{Compressible Euler Equations}
 \label{eulerVortexResults}
 
