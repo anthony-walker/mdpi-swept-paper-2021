@@ -451,7 +451,7 @@ We solved the heat diffusion equation numerically using forward-Euler and a thre
 \revised{where $T_i$ is with respect to simulation type $i$.}{revTwo}
 
 
-Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. We also include direct results of time per timestep in Appendix~\ref{sec:add_figs} which aids discussion here. A black dot with a white border represents the worst case and a white dot with a black border represents the best case in all of the contours.
+Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup results produced from our tests for the two sets of hardware described in Section~\ref{parameters-section}. \revised{We also include direct results of time per timestep in Appendix~\ref{sec:add_figs} which aids discussion here. A black dot with a white border represents the worst case and a white dot with a black border represents the best case in all of the contours.}{revTwo}
 
 \end{paracol}
 \nointerlineskip
@@ -468,7 +468,7 @@ Figures~\ref{fig:newSpeedupHeat} and \ref{fig:oldSpeedupHeat} show speedup resul
 \switchcolumn
 
 Figure~\ref{fig:newSpeedupHeat} shows a range of 0.22--2.69. 
-It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20. The time per timestep Figures~\ref{fig:tptNewHeatSwept} and~\ref{fig:tptNewHeatStandard} show all of the optimal cases occurring at 100\% share with a block size of 8 being the apparent best choice in both cases. 
+It is clear that the performance of the swept rule diminishes as the array size increases. The largest areas of performance increases generally exist above a share of 50\% and along the block size of 12--20. The majority of best cases lie between 90--100\% share and the 12--20 block size range. The worst-performing cases lay close to the optimal cases: between 90--100\% share but outside the block size limits 12--20. \revised{The time per timestep Figures~\ref{fig:tptNewHeatSwept} and~\ref{fig:tptNewHeatStandard} show all of the optimal cases occurring at 100\% share with a block size of 8 being the apparent best choice both solvers.}{revTwo} 
 
 \end{paracol}
 \nointerlineskip
@@ -483,19 +483,15 @@ It is clear that the performance of the swept rule diminishes as the array size 
 \linenumbers
 \switchcolumn
 
-In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit. Time per timestep Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the optimal cases occurring at 100\% for each solver for the 
+In Figure~\ref{fig:oldSpeedupHeat}, we see different trends than in Figure~\ref{fig:newSpeedupHeat} with a range of 0.78--1.31. Performance again diminishes as array size increases, it is better with lower shares in the case of this hardware, and it somewhat consistent across different block sizes. The best case for a given array size tends to occur at or below a 50\% share and between block sizes 12--24. The worst case for a given array size tends to occur between 80--100\% share and between block sizes of 20--32 with a couple occurrences on the upper limit. Time per timestep \revised{Figures~\ref{fig:tptOldHeatSwept} and~\ref{fig:tptOldHeatStandard} show the optimal cases occurring at 100\% for each solver but the optimal block size is different between the two. Lower blocksizes (8,12) appear to be the best case for the swept solver. However, the standard solver consistently has the best case occur at a size of 16.}{revTwo}
 
 
 \subsection{Compressible Euler Equations}
 \label{eulerVortexResults}
 
-We solved the Euler equations using a second-order Runge--Kutta scheme in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex described in Appendix~\ref{Compressible-Euler}. 
-We performed the same tests here as in Section~\ref{hdeResults}. 
-Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. 
-Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. 
-As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$. 
-This specific angle comes from the imposed velocity field. 
-We also see that the solutions match.
+We solved the Euler equations using a second-order Runge--Kutta scheme in time and a five-point central difference in space with a minmod flux limiter and Roe-approximate Riemann solver, which we verified against the analytical solution to the isentropic Euler Vortex described in Appendix~\ref{Compressible-Euler}. We performed the same tests here as in Section~\ref{hdeResults}. Figures~\ref{fig:newSpeedupEuler} and~\ref{fig:oldSpeedupEuler} show performance results produced by these simulations. Figure~\ref{fig:eulerSurface} compares the numerical and analytical solutions of the density of the vortex over time. 
+As we expect, the initial conditions of the vortex translate with an angle of $45^\circ$.This specific angle comes from the imposed velocity field. 
+We also see that the solutions match. Again, we included the time per timestep results in Appendix~\ref{sec:add_figs}.
 
 \newpage
 
